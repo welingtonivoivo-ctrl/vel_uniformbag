@@ -290,7 +290,13 @@ local function doChange(kind, slotNo)
         return notify(why, 'error')
     end
 
-    local result = lib.callback.await('street_uniformbag:confirmChange', false, begin.token, true)
+    local coords = GetEntityCoords(cache.ped)
+    local streetHash, crossHash = GetStreetNameAtCoord(coords.x, coords.y, coords.z)
+    local street = GetStreetNameFromHashKey(streetHash)
+    local cross = crossHash ~= 0 and GetStreetNameFromHashKey(crossHash) or ''
+    if cross ~= '' then street = ('%s / %s'):format(street, cross) end
+
+    local result = lib.callback.await('street_uniformbag:confirmChange', false, begin.token, true, street)
     if not result or not result.ok then
         Appearance.Apply(before)
         s.busy = false

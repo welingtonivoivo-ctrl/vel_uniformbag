@@ -214,7 +214,10 @@ lib.callback.register('street_uniformbag:beginChange', function(src, bagId, kind
 end)
 
 --- Fase 2: confirmação e transação (D51, D180–D184, D194).
-lib.callback.register('street_uniformbag:confirmChange', function(src, token, applied)
+lib.callback.register('street_uniformbag:confirmChange', function(src, token, applied, street)
+    -- Nome da rua vindo do cliente: só informativo no alerta; coordenadas sempre do servidor.
+    street = type(street) == 'string' and street:gsub('[%c<>]', ''):sub(1, 80) or nil
+    if street == '' then street = nil end
     local op = pending[token]
     if not op or op.src ~= src then return { error = 'block.invalid_request' } end
 
@@ -300,7 +303,7 @@ lib.callback.register('street_uniformbag:confirmChange', function(src, token, ap
 
     if targetUniform and not authorized then
         Alerts.Raise('vestir', src, op.bag, targetUniform, op.bagId .. ':' .. data.citizenid .. ':' .. token, nil,
-            ('%s:%s'):format(job.name or '?', tostring(Utils.JobGrade(job))))
+            ('%s:%s'):format(job.name or '?', tostring(Utils.JobGrade(job))), street)
     end
 
     -- Depois da troca o painel fecha; a bolsa continua no chão até alguém recolher (D208).

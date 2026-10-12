@@ -17,7 +17,7 @@ local function decodeList(text)
 end
 
 --- Canal ps-dispatch, disparado pelo servidor com coordenadas lidas no servidor (T5).
-local function sendPsDispatch(incident, settings, uniform)
+local function sendPsDispatch(incident, settings, uniform, street)
     if GetResourceState('ps-dispatch') ~= 'started' then return 'indisponivel' end
 
     local jobTypes = decodeList(settings.alert_job_types)
@@ -34,7 +34,7 @@ local function sendPsDispatch(incident, settings, uniform)
             icon = d.icon,
             priority = settings.alert_priority or d.priority,
             coords = vector3(incident.x, incident.y, incident.z),
-            street = L('alert.street_unknown'),
+            street = street or L('alert.street_unknown'),
             information = L('alert.info', uniform.name, incident.bag_id),
             radius = d.radius,
             alert = {
@@ -55,9 +55,50 @@ local function sendPsDispatch(incident, settings, uniform)
     return ok and 'enviado' or 'falhou'
 end
 
+--- Quem recebe pelo ps-dispatch: tipo de emprego na lista e em serviço (regra atual do ps-dispatch,
+--- reproduzida no servidor para a anti-duplicação — D127, T11).
+local function receivesPsDispatch(job, jobTypes)
+    if not job or not job.onduty then return false end
+    for _, t in ipairs(jobTypes) do
+        if job.type == t then return true end
+    end
+    return false
+end
+
+--- Canal próprio por nome de emprego (D125–D131). Destinatários calculados só no servidor.
+local function sendJobNotify(incident, settings, uniform, street)
+    local names = decodeList(settings.alert_job_names)
+    if #names == 0 then return 'sem_destinatarios' end
+    local nameSet = {}
+    for _, n in ipairs(names) do nameSet[n] = true end
+
+    local psTypes = (settings.alert_mode == 'ambos') and decodeList(settings.alert_job_types) or {}
+    local onlyOnDuty = Utils.Bool(settings.alert_onduty_only)
+    local sent = 0
+
+    for _, playerId in ipairs(GetPlayers()) do
+        local id = tonumber(playerId)
+        local data = Utils.GetPlayerData(id)
+        local job = data and data.job
+        if job and nameSet[job.name] and (not onlyOnDuty or job.onduty)
+            and not receivesPsDispatch(job, psTypes) then
+            TriggerClientEvent('street_uniformbag:client:alert', id, {
+                id = incident.id,
+                uniform = uniform.name,
+                bagId = incident.bag_id,
+                coords = { x = incident.x, y = incident.y, z = incident.z },
+                street = street,
+                blipSeconds = settings.alert_blip_seconds or Config.DefaultBlipSeconds,
+            })
+            sent = sent + 1
+        end
+    end
+    return sent > 0 and 'enviado' or 'sem_destinatarios'
+end
+
 --- Registra a ocorrência e entrega aos canais. Nunca interrompe a troca (D133).
 ---@param kind 'vestir'|'mudanca_cargo'
-function Alerts.Raise(kind, src, bag, uniform, dedupKey, jobBefore, jobAfter)
+function Alerts.Raise(kind, src, bag, uniform, dedupKey, jobBefore, jobAfter, street)
     if dedupKey then
         if sent[dedupKey] then return end
         sent[dedupKey] = true
@@ -83,10 +124,11 @@ function Alerts.Raise(kind, src, bag, uniform, dedupKey, jobBefore, jobAfter)
         channels.psdispatch = 'desativado'
     else
         if settings.alert_mode == 'psdispatch' or settings.alert_mode == 'ambos' then
-            channels.psdispatch = sendPsDispatch(incident, settings, uniform)
+            channels.psdispatch = sendPsDispatch(incident, settings, uniform, street)
         end
         if settings.alert_mode == 'jobnotify' or settings.alert_mode == 'ambos' then
-            channels.jobnotify = 'etapa_4'
+            local ok, result = pcall(sendJobNotify, incident, settings, uniform, street)
+            channels.jobnotify = ok and result or 'falhou'
         end
     end
 
@@ -101,6 +143,40 @@ function Alerts.Raise(kind, src, bag, uniform, dedupKey, jobBefore, jobAfter)
         src = src, org = uniform.org, bagId = bag.bag_id, uniformId = uniform.id, coords = coords,
         data = { ocorrencia = incident.id, canais = channels, cargo = jobAfter },
     })
+end
+
+--- Configuração da organização para o painel (valores padrão quando ainda não existe).
+function Alerts.GetSettings(org)
+    local row = orgSettings(org) or {}
+    return {
+        enabled = Utils.Bool(row.alert_enabled),
+        mode = row.alert_mode or 'psdispatch',
+        jobTypes = decodeList(row.alert_job_types),
+        jobNames = decodeList(row.alert_job_names),
+        onDutyOnly = row.alert_onduty_only == nil and true or Utils.Bool(row.alert_onduty_only),
+        blipSeconds = row.alert_blip_seconds or Config.DefaultBlipSeconds,
+        code = row.alert_code or Config.Dispatch.code,
+        itemImage = row.item_image or '',
+        defaultStash = row.default_stash_id or '',
+    }
+end
+
+--- Grava a configuração da organização, já validada pelo painel.
+function Alerts.SaveSettings(src, org, s)
+    local data = Utils.GetPlayerData(src)
+    MySQL.query.await(
+        [[INSERT INTO `sub_org_settings` (`org`, `alert_enabled`, `alert_mode`, `alert_job_types`, `alert_job_names`, `alert_onduty_only`,
+            `alert_blip_seconds`, `alert_code`, `item_image`, `default_stash_id`, `updated_by`, `updated_at`)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+          ON DUPLICATE KEY UPDATE `alert_enabled` = VALUES(`alert_enabled`), `alert_mode` = VALUES(`alert_mode`),
+            `alert_job_types` = VALUES(`alert_job_types`), `alert_job_names` = VALUES(`alert_job_names`),
+            `alert_onduty_only` = VALUES(`alert_onduty_only`), `alert_blip_seconds` = VALUES(`alert_blip_seconds`),
+            `alert_code` = VALUES(`alert_code`), `item_image` = VALUES(`item_image`), `default_stash_id` = VALUES(`default_stash_id`),
+            `updated_by` = VALUES(`updated_by`), `updated_at` = NOW()]],
+        { org, s.enabled and 1 or 0, s.mode, json.encode(s.jobTypes), json.encode(s.jobNames), s.onDutyOnly and 1 or 0,
+          s.blipSeconds, s.code, s.itemImage ~= '' and s.itemImage or nil, s.defaultStash ~= '' and s.defaultStash or nil,
+          data and data.citizenid or '?' })
+    Utils.Audit('admin', 'configuracao_alterada', { src = src, org = org, data = s })
 end
 
 --- Configuração mínima de alerta (etapa 3; o painel completo chega na etapa 4).

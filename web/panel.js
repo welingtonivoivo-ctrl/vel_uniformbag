@@ -69,7 +69,8 @@
                         el('button', { class: 'btn btn-secondary', text: t.open_store, title: t.store_hint, onclick: () => nui('openStore') }),
                         el('button', { class: 'btn btn-secondary', text: t.close, onclick: close })),
                     el('div', { class: 'pn-tabs' },
-                        [['uniforms', t.tab_uniforms], ['issue', t.tab_issue], ['bags', t.tab_bags]].map(([id, label]) =>
+                        [['uniforms', t.tab_uniforms], ['issue', t.tab_issue], ['bags', t.tab_bags], ['alerts', t.tab_alerts], ['audit', t.tab_audit],
+                            P.data.admin ? ['recovery', t.tab_recovery] : null].filter(Boolean).map(([id, label]) =>
                             el('button', { class: `pn-tab ${P.tab === id ? 'active' : ''}`, text: label, onclick: () => { P.tab = id; shell(); load(); } }))),
                     el('div', { class: 'pn-body', id: 'pn-body' }))));
         document.getElementById('pn-org').value = P.org;
@@ -86,7 +87,154 @@
         body.replaceChildren(el('div', { class: 'pn-col pn-empty', text: P.t.loading }));
         if (P.tab === 'uniforms') return loadUniforms();
         if (P.tab === 'issue') return loadIssue();
+        if (P.tab === 'alerts') return loadAlerts();
+        if (P.tab === 'audit') return loadAudit();
+        if (P.tab === 'recovery') return loadRecovery();
         return loadBags();
+    }
+
+    // ------------------------------------------------------------------ Alertas e logs
+
+    function checkList(options, selected, onChange) {
+        return el('div', { class: 'pn-checks' }, options.map(([value, label]) =>
+            el('label', { class: 'pn-check' },
+                el('input', { type: 'checkbox', checked: selected.includes(value), onchange: (e) => {
+                    onChange(e.target.checked ? [...selected.filter((x) => x !== value), value] : selected.filter((x) => x !== value));
+                } }), label)));
+    }
+
+    async function loadAlerts() {
+        const t = P.t;
+        const res = await call('alertSettings', P.org);
+        if (!P) return;
+        if (res.error) return document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-msg err', text: res.message }));
+        const s = res.settings;
+
+        const typesBox = el('div');
+        const namesBox = el('div');
+        const drawLists = () => {
+            typesBox.replaceChildren(checkList(res.jobTypes.map((x) => [x, x]), s.jobTypes, (v) => { s.jobTypes = v; drawLists(); }));
+            namesBox.replaceChildren(checkList(res.jobNames.map((j) => [j.name, `${j.label} (${j.name})`]), s.jobNames, (v) => { s.jobNames = v; drawLists(); }));
+        };
+        drawLists();
+
+        document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-main' },
+            res.psdispatch ? null : el('div', { class: 'pn-msg err', text: t.psdispatch_off }),
+            el('label', { class: 'pn-switch' }, el('input', { type: 'checkbox', checked: s.enabled, onchange: (e) => { s.enabled = e.target.checked; } }), t.alert_enabled),
+            el('label', { class: 'field' }, t.alert_mode,
+                el('select', { onchange: (e) => { s.mode = e.target.value; } },
+                    [['psdispatch', t.mode_psdispatch], ['jobnotify', t.mode_jobnotify], ['ambos', t.mode_both]]
+                        .map(([v, l]) => el('option', { value: v, text: l, selected: s.mode === v || undefined })))),
+            el('div', { class: 'pn-section' }, el('h3', { text: t.job_types }), el('div', { class: 'pn-item-sub', text: t.job_types_hint }), typesBox),
+            el('div', { class: 'pn-section' }, el('h3', { text: t.job_names }), el('div', { class: 'pn-item-sub', text: t.job_names_hint }), namesBox,
+                el('label', { class: 'pn-switch' }, el('input', { type: 'checkbox', checked: s.onDutyOnly, onchange: (e) => { s.onDutyOnly = e.target.checked; } }), t.onduty_only)),
+            el('div', { class: 'pn-row' },
+                el('label', { class: 'field' }, t.blip_seconds, el('input', { type: 'number', min: 30, max: 900, value: s.blipSeconds, onchange: (e) => { s.blipSeconds = Number(e.target.value); } })),
+                el('label', { class: 'field' }, t.alert_code, el('input', { type: 'text', maxlength: 10, value: s.code, oninput: (e) => { s.code = e.target.value; } })),
+                el('label', { class: 'field' }, t.item_image, el('input', { type: 'text', maxlength: 60, value: s.itemImage, placeholder: 'uniform_bag', title: t.item_image_hint, oninput: (e) => { s.itemImage = e.target.value.trim(); } })),
+                el('label', { class: 'field' }, t.default_stash, el('input', { type: 'text', maxlength: 80, value: s.defaultStash, oninput: (e) => { s.defaultStash = e.target.value.trim(); } }))),
+            el('div', { class: 'pn-item-sub', text: t.item_image_hint }),
+            el('div', { class: 'pn-row' }, el('button', { class: 'btn btn-primary', text: t.save, onclick: async () => {
+                const r = await call('saveAlertSettings', P.org, s);
+                setMsg('pn-alert-msg', r.error ? r.message : t.saved, !r.error);
+            } })),
+            el('div', { class: 'pn-msg', id: 'pn-alert-msg' })));
+    }
+
+    // ------------------------------------------------------------------ Auditoria
+
+    const CATEGORIES = ['emissao', 'retirada', 'transferencia', 'devolucao', 'troca', 'uso_indevido', 'mudanca_cargo',
+        'pendente_verificacao', 'admin', 'recuperacao', 'duplicacao', 'sistema'];
+
+    async function loadAudit() {
+        const t = P.t;
+        P.auditFilter = P.auditFilter || { category: '', bagId: '', actor: '', page: 0 };
+        const f = P.auditFilter;
+        const res = await call('audit', P.org, f);
+        if (!P) return;
+        if (res.error) return document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-msg err', text: res.message }));
+
+        const reload = () => { f.page = 0; loadAudit(); };
+        document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-main' },
+            el('div', { class: 'pn-row' },
+                el('label', { class: 'field' }, t.category,
+                    el('select', { onchange: (e) => { f.category = e.target.value; reload(); } },
+                        el('option', { value: '', text: t.all }),
+                        CATEGORIES.map((c) => el('option', { value: c, text: c, selected: f.category === c || undefined })))),
+                el('label', { class: 'field' }, t.bag_id, el('input', { type: 'text', value: f.bagId, placeholder: 'UB-', onchange: (e) => { f.bagId = e.target.value; reload(); } })),
+                el('label', { class: 'field' }, t.actor, el('input', { type: 'text', value: f.actor, onchange: (e) => { f.actor = e.target.value; reload(); } }))),
+            res.rows.length === 0 ? el('div', { class: 'pn-empty', text: t.no_results }) :
+                el('table', { class: 'pn-table' },
+                    el('thead', {}, el('tr', {}, [t.when, t.category, t.action, t.bag_id, t.actor, t.details].map((h) => el('th', { text: h })))),
+                    el('tbody', {}, res.rows.map((r) => el('tr', {},
+                        el('td', { text: fmtDate(r.created_at) }),
+                        el('td', { text: r.category }),
+                        el('td', { text: r.action }),
+                        el('td', { class: 'mono', text: r.bag_id || '—' }),
+                        el('td', { text: r.actor_name || r.actor_citizenid || '—' }),
+                        el('td', { class: 'pn-item-sub', text: r.data || '' }))))),
+            el('div', { class: 'pn-row' },
+                el('button', { class: 'btn btn-secondary btn-sm', text: t.previous, disabled: f.page === 0 || undefined, onclick: () => { f.page -= 1; loadAudit(); } }),
+                el('span', { class: 'pn-item-sub', text: String(f.page + 1) }),
+                el('button', { class: 'btn btn-secondary btn-sm', text: t.next, disabled: !res.hasMore || undefined, onclick: () => { f.page += 1; loadAudit(); } }))));
+    }
+
+    // ------------------------------------------------------------------ Recuperação (só staff)
+
+    function loadRecovery() {
+        const t = P.t;
+        const results = el('div', { class: 'pn-list', style: 'width:auto;border:none;padding:0' });
+        const detail = el('div', { class: 'pn-main' }, el('div', { class: 'pn-empty', text: t.recovery_note }));
+
+        const search = async (q) => {
+            const r = await call('findCharacter', q);
+            if (!P) return;
+            results.replaceChildren(...((r.results || []).length === 0 ? [el('div', { class: 'pn-empty', text: t.no_results })] :
+                r.results.map((c) => el('div', { class: 'pn-item', onclick: () => openChar(c) },
+                    el('div', { class: 'pn-item-title', text: `${c.firstname || ''} ${c.lastname || ''}` }),
+                    el('div', { class: 'pn-item-sub mono', text: c.citizenid })))));
+        };
+
+        const openChar = async (c) => {
+            const r = await call('recoverySources', c.citizenid);
+            if (!P) return;
+            if (r.error) return detail.replaceChildren(el('div', { class: 'pn-msg err', text: r.message }));
+            const form = { source: null, reason: '' };
+            detail.replaceChildren(
+                el('h2', { text: `${c.firstname || ''} ${c.lastname || ''} (${c.citizenid})` }),
+                el('div', { class: 'pn-item-sub', text: t.recovery_note }),
+                el('div', { class: 'pn-section' }, el('h3', { text: t.choose_source }),
+                    (r.sources || []).length === 0 ? el('div', { class: 'pn-empty', text: t.no_results }) :
+                        r.sources.map((s) => el('label', { class: 'pn-check', style: 'margin-bottom:6px' },
+                            el('input', { type: 'radio', name: 'rec-src', onchange: () => { form.source = s; } }),
+                            `${fmtDate(s.at)} · ${s.label}`))),
+                el('label', { class: 'field' }, `${t.reason} — ${t.reason_hint}`,
+                    el('input', { type: 'text', maxlength: 500, oninput: (e) => { form.reason = e.target.value; } })),
+                el('div', { class: 'pn-row' }, el('button', { class: 'btn btn-primary', text: t.register, onclick: async () => {
+                    if (!form.source) return setMsg('pn-rec-msg', t.choose_source, false);
+                    const res = await call('createRecovery', c.citizenid, form.source.type, form.source.id, form.reason);
+                    if (res.error) return setMsg('pn-rec-msg', res.message, false);
+                    setMsg('pn-rec-msg', t.saved, true);
+                    openChar(c);
+                } })),
+                el('div', { class: 'pn-msg', id: 'pn-rec-msg' }),
+                el('div', { class: 'pn-section' }, el('h3', { text: t.pending }),
+                    (r.recoveries || []).length === 0 ? el('div', { class: 'pn-empty', text: t.no_results }) :
+                        r.recoveries.map((rec) => el('div', { class: 'pn-variant' },
+                            el('div', { class: 'pn-item-sub', text: `#${rec.id} · ${rec.status} · ${fmtDate(rec.created_at)} · ${rec.reason}` }),
+                            rec.status === 'aguardando' ? el('button', { class: 'btn btn-danger btn-sm', text: t.cancel_rec, onclick: async () => {
+                                const x = await call('cancelRecovery', rec.id);
+                                if (x.error) return setMsg('pn-rec-msg', x.message, false);
+                                openChar(c);
+                            } }) : null))));
+        };
+
+        document.getElementById('pn-body').replaceChildren(
+            el('div', { class: 'pn-col pn-list' },
+                el('label', { class: 'field' }, t.find_char,
+                    el('input', { type: 'text', placeholder: t.find_hint, onchange: (e) => search(e.target.value.trim()) })),
+                results),
+            el('div', { class: 'pn-col pn-main' }, detail));
     }
 
     // ------------------------------------------------------------------ Uniformes

@@ -6,6 +6,8 @@ local panelOpen = false
 local ALLOWED = {
     uniforms = true, saveUniform = true, captureVariant = true, removeVariant = true,
     stashes = true, issue = true, bags = true, bagHistory = true,
+    alertSettings = true, saveAlertSettings = true, audit = true,
+    findCharacter = true, recoverySources = true, createRecovery = true, cancelRecovery = true,
 }
 
 local function panelLocale()
@@ -17,6 +19,11 @@ local function panelLocale()
         'no_stash', 'issue_btn', 'issued', 'status', 'all', 'in_stock', 'circulating', 'unknown', 'ground',
         'duplicated', 'search', 'bag_id', 'location', 'last_activity', 'history', 'slots', 'empty', 'authorized_for',
         'saved', 'captured', 'confirm_remove', 'loading', 'no_bags', 'filter',
+        'tab_alerts', 'tab_audit', 'tab_recovery', 'alert_enabled', 'alert_mode', 'mode_psdispatch', 'mode_jobnotify',
+        'mode_both', 'job_types', 'job_types_hint', 'job_names', 'job_names_hint', 'onduty_only', 'blip_seconds',
+        'alert_code', 'item_image', 'item_image_hint', 'default_stash', 'psdispatch_off', 'category', 'actor',
+        'previous', 'next', 'when', 'action', 'details', 'find_char', 'find_hint', 'sources', 'reason',
+        'reason_hint', 'register', 'pending', 'cancel_rec', 'no_results', 'recovery_note', 'choose_source',
     }
     local t = {}
     for _, k in ipairs(keys) do t[k] = L('panel.' .. k) end

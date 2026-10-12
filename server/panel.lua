@@ -257,6 +257,116 @@ lib.callback.register('street_uniformbag:panel:bagHistory', function(src, bagId)
 end)
 
 ------------------------------------------------------------------------------------------------
+-- Alertas e logs (D13, D124–D134, D158, D174)
+------------------------------------------------------------------------------------------------
+
+--- Configuração atual + listas reais do QBox para escolher (tipos e nomes de empregos).
+lib.callback.register('street_uniformbag:panel:alertSettings', function(src, org)
+    local ok, err = guard(src, org)
+    if not ok then return { error = err } end
+
+    local jobs = exports.qbx_core:GetJobs() or {}
+    local types, names = {}, {}
+    for name, job in pairs(jobs) do
+        if name ~= 'unemployed' then
+            names[#names + 1] = { name = name, label = job.label or name }
+            if type(job.type) == 'string' and job.type ~= '' then types[job.type] = true end
+        end
+    end
+    table.sort(names, function(a, b) return a.label:lower() < b.label:lower() end)
+    local typeList = {}
+    for t in pairs(types) do typeList[#typeList + 1] = t end
+    table.sort(typeList)
+
+    return { settings = Alerts.GetSettings(org), jobTypes = typeList, jobNames = names, psdispatch = GetResourceState('ps-dispatch') == 'started' }
+end)
+
+lib.callback.register('street_uniformbag:panel:saveAlertSettings', function(src, org, form)
+    local ok, err = guard(src, org)
+    if not ok then return { error = err } end
+    if type(form) ~= 'table' then return { error = 'block.invalid_request' } end
+
+    local jobs = exports.qbx_core:GetJobs() or {}
+    local validTypes = {}
+    for _, job in pairs(jobs) do if type(job.type) == 'string' then validTypes[job.type] = true end end
+
+    local function filterList(list, valid)
+        local out = {}
+        for _, v in ipairs(type(list) == 'table' and list or {}) do
+            if type(v) == 'string' and valid(v) then out[#out + 1] = v end
+        end
+        return out
+    end
+
+    local mode = (form.mode == 'jobnotify' or form.mode == 'ambos') and form.mode or 'psdispatch'
+    local blip = math.floor(tonumber(form.blipSeconds) or Config.DefaultBlipSeconds)
+    if blip < 30 or blip > 900 then return { error = 'panel.blip_invalid' } end
+
+    local code = type(form.code) == 'string' and form.code:gsub('[^%w%-]', ''):sub(1, 10) or Config.Dispatch.code
+    local image = type(form.itemImage) == 'string' and form.itemImage or ''
+    if image ~= '' and Bags.ResolveImage(image) ~= image then return { error = 'panel.image_invalid' } end
+    local stash = type(form.defaultStash) == 'string' and form.defaultStash:sub(1, 80) or ''
+
+    Alerts.SaveSettings(src, org, {
+        enabled = form.enabled == true,
+        mode = mode,
+        jobTypes = filterList(form.jobTypes, function(v) return validTypes[v] end),
+        jobNames = filterList(form.jobNames, function(v) return jobs[v] ~= nil end),
+        onDutyOnly = form.onDutyOnly ~= false,
+        blipSeconds = blip,
+        code = code ~= '' and code or Config.Dispatch.code,
+        itemImage = image,
+        defaultStash = stash,
+    })
+    return { ok = true }
+end)
+
+------------------------------------------------------------------------------------------------
+-- Auditoria (D71, D72, D161): consulta paginada; líder só da própria organização.
+------------------------------------------------------------------------------------------------
+
+local AUDIT_CATEGORIES = {
+    emissao = true, retirada = true, transferencia = true, devolucao = true, troca = true, uso_indevido = true,
+    mudanca_cargo = true, pendente_verificacao = true, admin = true, recuperacao = true, duplicacao = true, sistema = true,
+}
+
+lib.callback.register('street_uniformbag:panel:audit', function(src, org, filter)
+    local ok, err = guard(src, org)
+    if not ok then return { error = err } end
+    filter = type(filter) == 'table' and filter or {}
+
+    local where, values = { '(`org` = ? OR `org` IS NULL AND ? = 1)' }, { org, isAdmin(src) and 1 or 0 }
+    if AUDIT_CATEGORIES[filter.category] then
+        where[#where + 1] = '`category` = ?'
+        values[#values + 1] = filter.category
+    end
+    if type(filter.bagId) == 'string' and #filter.bagId > 0 then
+        where[#where + 1] = '`bag_id` LIKE ?'
+        values[#values + 1] = '%' .. filter.bagId:upper():gsub('[^%w%-]', '') .. '%'
+    end
+    if type(filter.actor) == 'string' and #filter.actor > 0 then
+        where[#where + 1] = '(`actor_name` LIKE ? OR `actor_citizenid` LIKE ?)'
+        local like = '%' .. filter.actor:gsub('[%%_]', '') .. '%'
+        values[#values + 1] = like
+        values[#values + 1] = like
+    end
+
+    local page = math.max(0, math.floor(tonumber(filter.page) or 0))
+    values[#values + 1] = page * 50
+
+    local rows = MySQL.query.await(
+        ('SELECT `id`, `created_at`, `category`, `action`, `bag_id`, `actor_name`, `actor_citizenid`, `data` FROM `sub_audit` WHERE %s ORDER BY `id` DESC LIMIT 51 OFFSET ?')
+            :format(table.concat(where, ' AND ')), values) or {}
+
+    local hasMore = #rows > 50
+    if hasMore then rows[51] = nil end
+    for _, r in ipairs(rows) do
+        r.data = r.data and r.data:sub(1, 300) or nil
+    end
+    return { rows = rows, hasMore = hasMore, page = page }
+end)
+
+------------------------------------------------------------------------------------------------
 -- Loja de roupas (D206): só confere o perfil; o editor abre no cliente.
 ------------------------------------------------------------------------------------------------
 

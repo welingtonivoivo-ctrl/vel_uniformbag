@@ -29,6 +29,7 @@ server_scripts {
     'server/change.lua',
     'server/commands.lua',
     'server/panel.lua',
+    'server/recovery.lua',
     'server/main.lua',
 }
 
@@ -38,6 +39,8 @@ client_scripts {
     'client/bag.lua',
     'client/ground.lua',
     'client/panel.lua',
+    'client/alerts.lua',
+    'client/recovery.lua',
 }
 
 ui_page 'web/index.html'
