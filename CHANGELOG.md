@@ -11,6 +11,7 @@
 - Painel: aba "Baús" com regra só masculino / só feminino por baú (D215) e botão para limpar as bolsas de um baú (D216).
 - Emissão respeita a regra masculino/feminino do baú; aba "Baús" com todas as organizações e teleporte para a staff (D217).
 - Painel: cores por versão (rosa = feminina) (D218) e volta na última organização e aba usadas (D219).
+- Retirada do baú: uma bolsa por vez; 1 retirada grátis por jogador e R$ 3000 nas demais (D220).
 - Removida a marca da cidade (autor, descrição, README, tutorial e documentos). `#6400E6` passa a ser só a cor padrão quando o servidor não define `mri:color`.
 
 ### Atenção ao atualizar

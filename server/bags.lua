@@ -244,12 +244,77 @@ local function onCreateItem(payload)
     return meta
 end
 
---- Hook swapItems: só registra a nova localização da bolsa (base da conferência de duplicidade,
---- D189). Nunca bloqueia a movimentação. A auditoria de retirada/transferência entra na etapa 4.
+------------------------------------------------------------------------------------------------
+-- Retirada do baú (D220): uma bolsa por vez; cada jogador tem UMA retirada grátis na vida
+-- (todas as organizações); devolver uma bolsa ao baú da organização devolve a retirada grátis.
+-- Depois disso cada retirada custa Config.ReplacementPrice (banco; se faltar, dinheiro).
+-- O crédito fica no KVP do servidor (sem tabela nova): ausente = nunca usou = grátis.
+------------------------------------------------------------------------------------------------
+
+local FREE = 'free_bag:'
+
+local function swapNotify(src, key, kind, ...)
+    TriggerClientEvent('ox_lib:notify', src, { type = kind or 'error', description = L(key, ...) })
+end
+
+local function isOrgStash(invId, org)
+    return type(invId) == 'string' and type(org) == 'string' and invId:sub(1, #org + 7) == org .. '_stash_'
+end
+
+--- Cobra (ou usa a retirada grátis) antes de a bolsa sair do baú. Síncrono: roda dentro do hook.
+local function chargeWithdrawal(src, meta, stashId)
+    local player = exports.qbx_core:GetPlayer(src)
+    local cid = player and player.PlayerData.citizenid
+    if not cid then return false end
+
+    local credit = GetResourceKvpString(FREE .. cid)
+    if credit == nil or credit == '1' then
+        SetResourceKvp(FREE .. cid, '0')
+        swapNotify(src, 'withdraw.free', 'success')
+        CreateThread(function()
+            Utils.Audit('retirada', 'retirada_gratis', { src = src, org = meta.org, uniformId = meta.uniformId, bagId = meta.bagId, data = { bau = stashId } })
+        end)
+        return true
+    end
+
+    local price = Config.ReplacementPrice
+    local money = player.PlayerData.money or {}
+    local paidWith
+    if (money.bank or 0) >= price and exports.qbx_core:RemoveMoney(src, 'bank', price, 'bolsa de uniforme') then
+        paidWith = 'bank'
+    elseif (money.cash or 0) >= price and exports.qbx_core:RemoveMoney(src, 'cash', price, 'bolsa de uniforme') then
+        paidWith = 'cash'
+    end
+    if not paidWith then
+        swapNotify(src, 'withdraw.no_money', 'error', price)
+        return false
+    end
+
+    swapNotify(src, paidWith == 'bank' and 'withdraw.paid_bank' or 'withdraw.paid_cash', 'inform', price)
+    CreateThread(function()
+        Utils.Audit('retirada', 'retirada_paga', { src = src, org = meta.org, uniformId = meta.uniformId, bagId = meta.bagId, data = { bau = stashId, valor = price, pagamento = paidWith } })
+    end)
+    return true
+end
+
+--- Hook swapItems: regras de retirada (D220) e registro da nova localização da bolsa (D189).
 local function onSwapItems(payload)
     local item = payload.fromSlot
-    local meta = type(item) == 'table' and item.metadata
-    local bagId = meta and meta.bagId
+    local meta = type(item) == 'table' and item.metadata or {}
+
+    if payload.fromType == 'stash' and payload.toType == 'player' and isOrgStash(payload.fromInventory, meta.org) then
+        if (tonumber(payload.count) or 1) > 1 then
+            swapNotify(payload.source, 'withdraw.one_at_a_time')
+            return false
+        end
+        if not chargeWithdrawal(payload.source, meta, payload.fromInventory) then return false end
+    elseif payload.fromType == 'player' and payload.toType == 'stash' and isOrgStash(payload.toInventory, meta.org) then
+        local player = exports.qbx_core:GetPlayer(payload.source)
+        local cid = player and player.PlayerData.citizenid
+        if cid then SetResourceKvp(FREE .. cid, '1') end
+    end
+
+    local bagId = meta.bagId
     if type(bagId) ~= 'string' or not Bags.Known[bagId] then return end
     if payload.fromInventory == payload.toInventory then return end
 

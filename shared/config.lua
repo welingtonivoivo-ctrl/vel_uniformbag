@@ -16,6 +16,10 @@ Config.LockSeconds = 60
 -- Máximo de bolsas por lote de emissão (D157)
 Config.MaxBagsPerBatch = 20
 
+-- Retirada do baú (D220): uma por vez; 1 retirada grátis por jogador (devolver ao baú devolve a
+-- grátis); as demais custam este valor (banco; se faltar, dinheiro).
+Config.ReplacementPrice = 3000
+
 -- Duração padrão do ponto do alerta no mapa, em segundos; cada organização pode sobrescrever (D158)
 Config.DefaultBlipSeconds = 120
 
