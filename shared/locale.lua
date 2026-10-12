@@ -241,6 +241,7 @@ Locale = {
     ['discord.failed']       = 'Envio ao Discord do registro #%s falhou (status %s); o registro continua salvo no banco.',
     ['startup.points']       = 'Pontos de gestão carregados: %s.',
     ['startup.relabel']      = 'Nomes das bolsas nos baús atualizados: %s.',
+    ['startup.reload_needed'] = 'Arquivo server/stashes.lua não carregado: rode "refresh" e depois "ensure vel_uniformbag". O bloqueio de baús por modelo está desligado até lá.',
 
     ['alert.notify']         = 'Farda: %s · Rua: %s',
 
