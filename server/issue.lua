@@ -41,6 +41,7 @@ function Issue.Run(src, uniformId, qty, stashId)
     if exports.ox_inventory:CanCarryItem(stashId, Config.ItemName, qty, metadata) then
         if exports.ox_inventory:AddItem(stashId, Config.ItemName, qty, metadata) then
             delivered, failed = qty, 0
+            Bags.UniformStashes[stashId] = true
         end
     end
 

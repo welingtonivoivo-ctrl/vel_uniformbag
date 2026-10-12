@@ -261,6 +261,21 @@ local function isOrgStash(invId, org)
     return type(invId) == 'string' and type(org) == 'string' and invId:sub(1, #org + 7) == org .. '_stash_'
 end
 
+--- Baús de uniformes: os que já receberam emissão de bolsas ou têm regra masculino/feminino (D221).
+--- Nos demais baús (membro, líder etc.) as regras de retirada não se aplicam.
+Bags.UniformStashes = {}
+
+function Bags.LoadUniformStashes()
+    local rows = MySQL.query.await('SELECT DISTINCT `stash_id` FROM `sub_issue_batches` WHERE `delivered` > 0') or {}
+    for _, r in ipairs(rows) do Bags.UniformStashes[r.stash_id] = true end
+    return #rows
+end
+
+local function isUniformStash(invId, org)
+    if not isOrgStash(invId, org) then return false end
+    return Bags.UniformStashes[invId] == true or (StashRules ~= nil and StashRules.Get(invId) ~= nil)
+end
+
 --- Cobra (ou usa a retirada grátis) antes de a bolsa sair do baú. Síncrono: roda dentro do hook.
 local function chargeWithdrawal(src, meta, stashId)
     local player = exports.qbx_core:GetPlayer(src)
@@ -302,13 +317,13 @@ local function onSwapItems(payload)
     local item = payload.fromSlot
     local meta = type(item) == 'table' and item.metadata or {}
 
-    if payload.fromType == 'stash' and payload.toType == 'player' and isOrgStash(payload.fromInventory, meta.org) then
+    if payload.fromType == 'stash' and payload.toType == 'player' and isUniformStash(payload.fromInventory, meta.org) then
         if (tonumber(payload.count) or 1) > 1 then
             swapNotify(payload.source, 'withdraw.one_at_a_time')
             return false
         end
         if not chargeWithdrawal(payload.source, meta, payload.fromInventory) then return false end
-    elseif payload.fromType == 'player' and payload.toType == 'stash' and isOrgStash(payload.toInventory, meta.org) then
+    elseif payload.fromType == 'player' and payload.toType == 'stash' and isUniformStash(payload.toInventory, meta.org) then
         local player = exports.qbx_core:GetPlayer(payload.source)
         local cid = player and player.PlayerData.citizenid
         if cid then SetResourceKvp(FREE .. cid, '1') end
