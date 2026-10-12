@@ -144,3 +144,7 @@
 .pn-item.has-female:not(.has-male) { border-color: rgba(224, 69, 143, .45); }
 .pn-item.has-female:not(.has-male).selected { background: rgba(224, 69, 143, .16); border-color: #e0458f; }
 .pn-item.has-female:not(.has-male) .badge:not(.badge-muted) { background: rgba(224, 69, 143, .2); color: #e0458f; }
+
+/* Baús de uniformes do recurso (D223): rosa para feminino, roxo para masculino. */
+.pn-ustash.female td:first-child { box-shadow: inset 4px 0 0 #e0458f; }
+.pn-ustash.male td:first-child { box-shadow: inset 4px 0 0 var(--color-primary); }

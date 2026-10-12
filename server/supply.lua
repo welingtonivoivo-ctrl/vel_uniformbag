@@ -76,6 +76,12 @@ function Supply.SyncOrg(org)
     syncing[org] = true
     local ok, err = pcall(function()
         local uniforms = activeUniforms(org)
+        for _, d in ipairs(UniformStash.List(org)) do
+            local wanted, n = {}, 0
+            for _, u in ipairs(uniforms) do if u.models[d.model] then wanted[u.id] = u; n = n + 1 end end
+            UniformStash.Register(d, n)
+            syncStash(d.id, wanted)
+        end
         for _, stash in ipairs(Supply.OrgStashes(org)) do
             local rule = StashRules and StashRules.Get(stash.id)
             if RULE_MODELS[rule] then

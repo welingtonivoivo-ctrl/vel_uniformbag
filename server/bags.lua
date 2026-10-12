@@ -278,6 +278,8 @@ function Bags.LoadUniformStashes()
 end
 
 local function isUniformStash(invId, org)
+    local own = UniformStash and UniformStash.Get(invId)
+    if own then return own.org == org end
     if not isOrgStash(invId, org) then return false end
     return Bags.UniformStashes[invId] == true or (StashRules ~= nil and StashRules.Get(invId) ~= nil)
 end

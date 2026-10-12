@@ -25,6 +25,7 @@ server_scripts {
     'server/locks.lua',
     'server/ground.lua',
     'server/stashes.lua',
+    'server/ustash.lua',
     'server/supply.lua',
     'server/issue.lua',
     'server/alerts.lua',
@@ -46,6 +47,7 @@ client_scripts {
     'client/alerts.lua',
     'client/recovery.lua',
     'client/points.lua',
+    'client/ustash.lua',
 }
 
 ui_page 'web/index.html'

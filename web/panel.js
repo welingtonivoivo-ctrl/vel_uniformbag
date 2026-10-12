@@ -169,15 +169,61 @@
                     setMsg('pn-stash-msg', t.cleared.replace('%s', r.removed).replace('%s', r.kept), true);
                 } }))));
 
+        const confirmBtn = (cls, text, armedText, action) => el('button', { class: cls, text, onclick: async (e) => {
+            if (e.target.dataset.armed !== '1') {
+                e.target.dataset.armed = '1'; e.target.textContent = armedText;
+                setTimeout(() => { if (e.target.isConnected) { e.target.dataset.armed = ''; e.target.textContent = text; } }, 4000);
+                return;
+            }
+            e.target.dataset.armed = ''; e.target.textContent = text;
+            await action();
+        } });
+
+        const ownRow = (g, s) => el('tr', { class: s.model === 'mp_f_freemode_01' ? 'pn-ustash female' : 'pn-ustash male' },
+            el('td', {}, s.label, el('div', { class: 'pn-item-sub mono', text: s.id })),
+            el('td', {}, el('span', { class: `pn-vtag on ${s.model === 'mp_f_freemode_01' ? 'female' : 'male'}`, text: s.model === 'mp_f_freemode_01' ? t.rule_female : t.rule_male })),
+            el('td', {}, el('div', { class: 'pn-row' },
+                s.canTeleport ? el('button', { class: 'btn btn-secondary btn-sm', text: t.teleport, onclick: async () => {
+                    const r = await call('teleportStash', g.org, s.id);
+                    if (r.error) return setMsg('pn-stash-msg', r.message, false);
+                    close();
+                } }) : null,
+                res.canCreate ? confirmBtn('btn btn-danger btn-sm', t.ustash_delete, t.confirm_delete, async () => {
+                    const r = await call('deleteUStash', g.org, s.id);
+                    if (r.error) return setMsg('pn-stash-msg', r.message, false);
+                    loadStashRules();
+                }) : null)));
+
+        const form = { label: '', model: 'mp_f_freemode_01' };
+        const createForm = res.canCreate ? el('div', { class: 'pn-section' },
+            el('h3', { text: `${t.ustash_create_title} — ${org()?.label || P.org}` }),
+            el('div', { class: 'pn-item-sub', text: t.ustash_hint }),
+            el('div', { class: 'pn-row' },
+                el('label', { class: 'field' }, t.point_label, el('input', { type: 'text', maxlength: 60, placeholder: t.ustash_placeholder, oninput: (e) => { form.label = e.target.value; } })),
+                el('label', { class: 'field' }, t.ustash_type,
+                    el('select', { onchange: (e) => { form.model = e.target.value; } },
+                        el('option', { value: 'mp_f_freemode_01', text: t.rule_female }),
+                        el('option', { value: 'mp_m_freemode_01', text: t.rule_male }))),
+                el('button', { class: 'btn btn-primary', text: t.ustash_create, onclick: async () => {
+                    const r = await call('createUStash', P.org, form.label, form.model);
+                    if (r.error) return setMsg('pn-stash-msg', r.message, false);
+                    await loadStashRules();
+                    setMsg('pn-stash-msg', t.saved, true);
+                } }))) : null;
+
         document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-main' },
             el('div', { class: 'pn-item-sub', text: t.stash_rules_hint }),
             el('div', { class: 'pn-msg', id: 'pn-stash-msg' }),
+            createForm,
             groups.length === 0 ? el('div', { class: 'pn-empty', text: t.no_stash }) :
                 groups.map((g) => el('div', { class: 'pn-section' },
                     el('h3', { text: `${g.label} (${g.org})` }),
-                    el('table', { class: 'pn-table' },
-                        el('thead', {}, el('tr', {}, [t.stash, t.who_opens, ''].map((h) => el('th', { text: h })))),
-                        el('tbody', {}, g.stashes.map((s) => row(g, s))))))));
+                    (g.uniformStashes || []).length > 0 ? el('table', { class: 'pn-table' },
+                        el('thead', {}, el('tr', {}, [t.ustash_title, t.ustash_type, ''].map((h) => el('th', { text: h })))),
+                        el('tbody', {}, g.uniformStashes.map((s) => ownRow(g, s)))) : null,
+                    g.stashes.length > 0 ? el('table', { class: 'pn-table' },
+                        el('thead', {}, el('tr', {}, [t.stash_bossmenu, t.who_opens, ''].map((h) => el('th', { text: h })))),
+                        el('tbody', {}, g.stashes.map((s) => row(g, s)))) : null))));
     }
 
     // ------------------------------------------------------------------ Alertas e logs

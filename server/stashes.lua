@@ -11,6 +11,8 @@ local PREFIX = 'stash_model:'
 ---@return string|nil model 'mp_m_freemode_01' | 'mp_f_freemode_01' | nil (todos)
 function StashRules.Get(stashId)
     if type(stashId) ~= 'string' then return nil end
+    local own = UniformStash and UniformStash.Get(stashId)
+    if own then return own.model end -- baú de uniformes do recurso: o tipo vem do cadastro (D223)
     local value = GetResourceKvpString(PREFIX .. stashId)
     return MODELS[value] and value or nil
 end

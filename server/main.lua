@@ -100,6 +100,7 @@ CreateThread(function()
         log(L('startup.relabel', okRelabel and fixed or 0))
         Bags.RegisterHooks()
         if StashRules then StashRules.RegisterHook() else Utils.Error(L('startup.reload_needed')) end
+        log(L('startup.ustash', UniformStash.Load()))
         -- Os baús do mri_Qbossmenu podem ainda não existir no início: segunda passada depois.
         SetTimeout(60000, function()
             local ok, n = pcall(Bags.ResyncStashes)

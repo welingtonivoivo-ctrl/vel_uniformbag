@@ -285,12 +285,57 @@ lib.callback.register('vel_uniformbag:panel:stashRules', function(src, org)
             groups[#groups + 1] = { org = o.name, label = o.label, stashes = list }
         end
     end
-    return { groups = groups }
+    -- Baús de uniformes do recurso (D223), na frente dos baús do mri_Qbossmenu.
+    local byOrg = {}
+    for _, g in ipairs(groups) do byOrg[g.org] = g end
+    for _, d in ipairs(UniformStash.List(not admin and org or nil)) do
+        local g = byOrg[d.org]
+        if not g then
+            local job = (exports.qbx_core:GetJobs() or {})[d.org]
+            g = { org = d.org, label = job and job.label or d.org, stashes = {} }
+            byOrg[d.org] = g
+            groups[#groups + 1] = g
+        end
+        g.uniformStashes = g.uniformStashes or {}
+        g.uniformStashes[#g.uniformStashes + 1] = { id = d.id, label = d.label, model = d.model, canTeleport = admin }
+    end
+    table.sort(groups, function(a, b) return a.label:lower() < b.label:lower() end)
+    return { groups = groups, canCreate = admin }
+end)
+
+--- Criar / excluir baú de uniformes do recurso (D223). Só staff/emergência.
+lib.callback.register('vel_uniformbag:panel:createUStash', function(src, org, label, model)
+    local ok, err = guard(src, org)
+    if not ok then return { error = err } end
+    if not isAdmin(src) then return { error = 'cmd.no_permission' } end
+    local d, cerr = UniformStash.Create(src, org, label, model)
+    if not d then return { error = cerr } end
+    Utils.Audit('admin', 'bau_uniformes_criado', { src = src, org = org, data = { bau = d.id, nome = d.label, modelo = d.model } })
+    Supply.SyncOrgAsync(org)
+    return { ok = true, id = d.id }
+end)
+
+lib.callback.register('vel_uniformbag:panel:deleteUStash', function(src, org, stashId)
+    local ok, err = guard(src, org)
+    if not ok then return { error = err } end
+    if not isAdmin(src) then return { error = 'cmd.no_permission' } end
+    local own = UniformStash.Get(stashId)
+    if not own or own.org ~= org then return { error = 'cmd.stash_invalid' } end
+    local done, derr = UniformStash.Delete(stashId)
+    if not done then return { error = derr } end
+    Utils.Audit('admin', 'bau_uniformes_excluido', { src = src, org = org, data = { bau = stashId, nome = own.label } })
+    return { ok = true }
 end)
 
 --- Teleporta a staff até o baú (D217).
 lib.callback.register('vel_uniformbag:panel:teleportStash', function(src, org, stashId)
     if not isAdmin(src) then return { error = 'cmd.no_permission' } end
+    local own = UniformStash.Get(stashId)
+    if own then
+        SetEntityCoords(GetPlayerPed(src), own.x + 0.0, own.y + 0.0, own.z + 0.0, false, false, false, false)
+        Utils.Audit('admin', 'teleporte_bau', { src = src, org = own.org, data = { bau = stashId } })
+        return { ok = true }
+    end
     for _, st in ipairs(orgStashes(org)) do
         if st.id == stashId and st.coords then
             SetEntityCoords(GetPlayerPed(src), st.coords.x + 0.0, st.coords.y + 0.0, st.coords.z + 0.0, false, false, false, false)
@@ -320,7 +365,8 @@ lib.callback.register('vel_uniformbag:panel:clearStash', function(src, org, stas
     if not ok then return { error = err } end
     local found
     for _, s in ipairs(orgStashes(org)) do if s.id == stashId then found = s end end
-    if not found then return { error = 'cmd.stash_invalid' } end
+    local own = UniformStash.Get(stashId)
+    if not found and not (own and own.org == org) then return { error = 'cmd.stash_invalid' } end
 
     local item = Config.ItemName
     local removed, kept = 0, 0
