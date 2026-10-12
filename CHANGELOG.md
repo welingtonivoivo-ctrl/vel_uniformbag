@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.4.0] — 2026-10-12 — Nome neutro para distribuição (D210)
+
+### Alterado
+- Recurso renomeado de `street_uniformbag` para **`vel_uniformbag`**: pasta, eventos, permissões ACE (`vel_uniformbag.manage` / `vel_uniformbag.admin`), convars de webhook (`vel_uniformbag_webhook_<org>` / `vel_uniformbag_webhook_admin`) e export do item (`vel_uniformbag.useBag`).
+- Removida a marca da cidade (autor, descrição, README, tutorial e documentos). `#6400E6` passa a ser só a cor padrão quando o servidor não define `mri:color`.
+
+### Atenção ao atualizar
+- No `items.lua` do ox_inventory, trocar o export do item `uniform_bag` para `vel_uniformbag.useBag`.
+- No `server.cfg`, renomear as convars de webhook.
+- No mri_Qadmin, marcar a permissão nova no grupo da staff (a antiga deixa de valer).
+- Item `uniform_bag`, tabelas `sub_*` e dados existentes não mudam.
+
+## [0.3.0] — 2026-10-12 — Etapas 3 e 4 (bolsa e painel)
+
+### Adicionado
+- Bolsa de uniforme no jogo: bolsa real no chão, prévia da roupa, troca e retorno das roupas civis, alerta de uso indevido.
+- Painel de gestão (`/adminoutfit`, aba Plugins do mri_Qadmin e pontos nas sedes): uniformes, emissão, bolsas, alertas e logs, pontos, auditoria e recuperação.
+- Logs no Discord por webhook em convar privada; tutorial em `docs/TUTORIAL-DISCORD.md`.
+
 ## [0.2.0] — 2026-10-12 — Etapa 2 (dados e permissões)
 
 ### Adicionado

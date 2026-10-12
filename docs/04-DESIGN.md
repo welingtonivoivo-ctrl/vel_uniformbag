@@ -8,9 +8,9 @@ Decisões: D106–D113, D154–D159, D166, D170–D179, D185, D189–D192. Valor
 - **Público:** jogadores e lideranças de organizações de RP; staff.
 - **Três palavras:** sóbrio, organizado, institucional.
 - **Referências aprovadas:** painéis do mri_Qadmin e do mri_Qbossmenu (fundo escuro, destaques em roxo) (D107).
-- **Relação com o Street Roleplay:** cor principal `#6400E6`, a cor configurada na VPS, considerada referência oficial deste projeto (D106). Logotipo: o configurado no servidor (convar `mri:logo` na VPS), quando disponível (D109).
+- **Cor padrão:** `#6400E6`, usada só quando o servidor não define `mri:color` (D106 → ver D210). Logotipo: o configurado no servidor (convar `mri:logo` na VPS), quando disponível (D109).
 - A interface é **própria**, visualmente compatível com a MRI, sem copiar arquivos dela (D113).
-- Arquivos da interface (`web/`) e imagens das bolsas são versionados no repositório privado `street_uniformbag` (D167); logotipo e cor vêm das convars do servidor, nunca de arquivo privado no repositório.
+- Arquivos da interface (`web/`) e imagens das bolsas são versionados no repositório privado `vel_uniformbag` (D167); logotipo e cor vêm das convars do servidor, nunca de arquivo privado no repositório.
 
 ## 2. Cores
 
@@ -61,7 +61,7 @@ Se `mri:color` vier com outro valor, os tons de hover/secundária/destaque são 
 - **Modelo visual único (C10, D171):** mesma bolsa (mesmo formato, ângulo de 3/4, alça, zíper e etiqueta frontal), mudando só cor, símbolo e detalhes:
   | Arquivo | Cor principal | Símbolo |
   |---|---|---|
-  | `uniform_bag.png` (padrão) | roxo `#6400E6` (Street Roleplay) | "S" estilizado / identidade Street |
+  | `uniform_bag.png` (padrão) | roxo `#6400E6` (padrão) | bolsa estilizada, sem marca de cidade (D210) |
   | `uniform_bag_police.png` | azul-escuro | escudo |
   | `uniform_bag_ems.png` | vermelho | símbolo médico (cruz) |
   | `uniform_bag_mechanic.png` | laranja | chave/ferramenta |

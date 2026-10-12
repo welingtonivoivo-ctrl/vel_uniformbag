@@ -119,7 +119,7 @@ local function showPreview(kind, slotNo)
     preview.token = preview.token + 1
     local token = preview.token
 
-    local clothing = lib.callback.await('street_uniformbag:previewData', false, s.bagId, kind, slotNo, s.model)
+    local clothing = lib.callback.await('vel_uniformbag:previewData', false, s.bagId, kind, slotNo, s.model)
     if token ~= preview.token or session ~= s or not clothing then return end
 
     if not preview.ped or not DoesEntityExist(preview.ped) then
@@ -153,7 +153,7 @@ local function closePanel(reasonKey)
     SetNuiFocus(false, false)
     SendNUIMessage({ action = 'close' })
     ClearPedTasks(cache.ped)
-    lib.callback.await('street_uniformbag:close', false, s.bagId)
+    lib.callback.await('vel_uniformbag:close', false, s.bagId)
     if reasonKey then notify(reasonKey, 'error') end
 end
 
@@ -168,7 +168,7 @@ function Bag.Collect(bagId)
     faceSpot(spot)
     playOnce(Config.Animations.collect)
     ClearPedTasks(cache.ped)
-    if lib.callback.await('street_uniformbag:collect', false, bagId) then
+    if lib.callback.await('vel_uniformbag:collect', false, bagId) then
         notify('done.collected', 'success')
     end
 end
@@ -179,7 +179,7 @@ function Bag.OpenGround(bagId)
     local reason = clientBlock()
     if reason then return notify(reason, 'error') end
     if not walkToSpot(Ground.Spot(bagId)) then return end
-    lib.callback.await('street_uniformbag:openGround', false, bagId)
+    lib.callback.await('vel_uniformbag:openGround', false, bagId)
 end
 
 --- Vigia distância e estado e renova a trava enquanto o painel está aberto (D155, D156).
@@ -209,7 +209,7 @@ local function watch(s)
 
             if GetGameTimer() >= nextRenew and not s.busy then
                 nextRenew = GetGameTimer() + Config.LockRenewSeconds * 1000
-                if not lib.callback.await('street_uniformbag:renewLock', false, s.bagId) then
+                if not lib.callback.await('vel_uniformbag:renewLock', false, s.bagId) then
                     closePanel('block.lock_lost')
                     return
                 end
@@ -231,7 +231,7 @@ local function locale()
     }
 end
 
-RegisterNetEvent('street_uniformbag:client:open', function(data)
+RegisterNetEvent('vel_uniformbag:client:open', function(data)
     if session then return end
 
     session = { bagId = data.bagId, spot = data.spot, data = data, model = exports.mri_Qappearance:getPedModel(cache.ped) }
@@ -265,7 +265,7 @@ local function doChange(kind, slotNo)
     end
 
     local before = Appearance.Capture()
-    local begin = lib.callback.await('street_uniformbag:beginChange', false, s.bagId, kind, slotNo, before)
+    local begin = lib.callback.await('vel_uniformbag:beginChange', false, s.bagId, kind, slotNo, before)
 
     if not begin or begin.error then
         unbusy()
@@ -283,7 +283,7 @@ local function doChange(kind, slotNo)
 
     if not applied then
         Appearance.Apply(before) -- desfaz no corpo; nada foi gravado
-        lib.callback.await('street_uniformbag:confirmChange', false, begin.token, false)
+        lib.callback.await('vel_uniformbag:confirmChange', false, begin.token, false)
         local why = s.abort or 'block.apply_failed'
         s.busy = false
         closePanel(nil)
@@ -296,7 +296,7 @@ local function doChange(kind, slotNo)
     local cross = crossHash ~= 0 and GetStreetNameFromHashKey(crossHash) or ''
     if cross ~= '' then street = ('%s / %s'):format(street, cross) end
 
-    local result = lib.callback.await('street_uniformbag:confirmChange', false, begin.token, true, street)
+    local result = lib.callback.await('vel_uniformbag:confirmChange', false, begin.token, true, street)
     if not result or not result.ok then
         Appearance.Apply(before)
         s.busy = false
@@ -359,7 +359,7 @@ end)
 local function recoveryCheck(delay)
     CreateThread(function()
         Wait(delay)
-        local result = lib.callback.await('street_uniformbag:recoveryCheck', false)
+        local result = lib.callback.await('vel_uniformbag:recoveryCheck', false)
         if result and result.clothing and Appearance.Apply(result.clothing) then
             Appearance.Save()
             notify('recovery.applied', 'inform')

@@ -7,7 +7,7 @@ Database = {
 }
 
 local function log(msg)
-    print('^5[street_uniformbag]^7 ' .. msg)
+    print('^5[vel_uniformbag]^7 ' .. msg)
 end
 
 local function currentVersion()

@@ -13,7 +13,7 @@ local queue = {}
 local MAX_TRIES = 3
 
 local function webhook(name)
-    local url = GetConvar('street_uniformbag_webhook_' .. name, '')
+    local url = GetConvar('vel_uniformbag_webhook_' .. name, '')
     if url:match('^https://discord%.com/api/webhooks/') or url:match('^https://discordapp%.com/api/webhooks/') then
         return url
     end

@@ -26,13 +26,13 @@ local function build(list)
                 debug = false,
                 options = {
                     {
-                        name = 'street_uniformbag:point:' .. id,
+                        name = 'vel_uniformbag:point:' .. id,
                         icon = 'fa-solid fa-shirt',
                         label = L('target.manage', p.label),
                         distance = 2.5,
                         canInteract = function() return isBossOf(p.org) end,
                         onSelect = function()
-                            CreateThread(function() lib.callback.await('street_uniformbag:openFromPoint', false, id) end)
+                            CreateThread(function() lib.callback.await('vel_uniformbag:openFromPoint', false, id) end)
                         end,
                     },
                 },
@@ -42,10 +42,10 @@ local function build(list)
     end
 end
 
-RegisterNetEvent('street_uniformbag:client:points', build)
+RegisterNetEvent('vel_uniformbag:client:points', build)
 
 local function sync()
-    build(lib.callback.await('street_uniformbag:pointsList', false))
+    build(lib.callback.await('vel_uniformbag:pointsList', false))
 end
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function() SetTimeout(3000, sync) end)

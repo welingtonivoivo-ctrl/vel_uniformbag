@@ -12,7 +12,7 @@ Dois conceitos que não se confundem (D192, D195):
 |---|---|---|
 | Usar o item **"Bolsa de Uniforme"** no inventário | Qualquer jogador | Ter o item; bolsa não estar em uso por outra pessoa; não estar morto/incapacitado, algemado/imobilizado, em veículo ou nadando — checado antes e durante (D154) |
 | Comando **`/minharoupa`** | O próprio personagem | Ter recuperação "Aguardando aplicação" em seu nome (D159) |
-| Aba **"Bolsas de Uniformes"** em Plugins do mri_Qadmin | Staff | Permissão `street_uniformbag.manage` ou ACE de emergência |
+| Aba **"Bolsas de Uniformes"** em Plugins do mri_Qadmin | Staff | Permissão `vel_uniformbag.manage` ou ACE de emergência |
 | **Ponto de gestão** na sede (olhinho) | Líder | `isboss` na organização do ponto; ponto ativo |
 | Comando **`/adminoutfit`** | Staff | Permissão "Gerenciar Bolsas de Uniformes" ou ACE de emergência (D205) |
 
@@ -152,7 +152,7 @@ Hook `swapItems` do ox_inventory, filtrado no item "Bolsa de Uniforme":
 
 - Imagem do item: organização sem `item_image` usa a bolsa padrão roxa; ao salvar outra imagem no painel (aba Alertas e logs / configurações), o servidor valida o nome e a existência do arquivo; bolsas emitidas depois usam a nova imagem, e as já emitidas são atualizadas na próxima atividade (D174).
 - Nova organização com imagem própria: rodar o script de `art/` com a cor e o símbolo dela, aprovar o render, copiar o PNG para `ox_inventory/web/images` e informar o nome no painel — sem alterar o núcleo (D178).
-- Instalação: a pasta deve se chamar exatamente `street_uniformbag` (igual ao repositório, D167); clonar o repositório já cria a pasta certa em `resources/[meus_scripts]/`.
+- Instalação: a pasta deve se chamar exatamente `vel_uniformbag` (igual ao repositório, D167); clonar o repositório já cria a pasta certa em `resources/[meus_scripts]/`.
 
 - Na primeira partida: migrações criam as tabelas; permissão registrada no mri_Qadmin; aba de plugin registrada.
 - Organizações começam **sem** uniformes, pontos, destinatários de alerta e categorias de log ativas, exceto as essenciais.

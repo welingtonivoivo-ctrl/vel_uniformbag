@@ -68,6 +68,6 @@ function Appearance.Save()
 end
 
 -- Captura pedida pelos comandos provisórios de cadastro (etapa 3).
-lib.callback.register('street_uniformbag:client:capture', function()
+lib.callback.register('vel_uniformbag:client:capture', function()
     return Appearance.Capture()
 end)

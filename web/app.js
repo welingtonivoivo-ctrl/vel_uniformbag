@@ -1,7 +1,7 @@
 // Tela "Bolsa" (03-FLUXO §2.1, §4; 04-DESIGN). Só exibe e repassa escolhas; o servidor decide tudo.
 'use strict';
 
-const RESOURCE = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'street_uniformbag';
+const RESOURCE = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'vel_uniformbag';
 const $ = (id) => document.getElementById(id);
 
 let state = null;     // { data, playerModel, t }

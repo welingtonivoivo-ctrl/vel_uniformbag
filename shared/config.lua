@@ -1,6 +1,6 @@
--- Configuração centralizada do street_uniformbag (TRD §1, D160).
+-- Configuração centralizada do vel_uniformbag (TRD §1, D160).
 -- Webhooks e ACE NÃO ficam aqui: webhooks em convars privadas
--- (street_uniformbag_webhook_<org> / _admin) e ACE no server.cfg (D76, D82).
+-- (vel_uniformbag_webhook_<org> / _admin) e ACE no server.cfg (D76, D82).
 
 Config = {}
 

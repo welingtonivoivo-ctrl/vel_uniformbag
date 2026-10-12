@@ -54,7 +54,7 @@ local function add(bagId, spot)
             debug = false,
             options = {
                 {
-                    name = 'street_uniformbag:open:' .. bagId,
+                    name = 'vel_uniformbag:open:' .. bagId,
                     icon = 'fa-solid fa-shirt',
                     label = L('target.open'),
                     distance = 2.0,
@@ -62,7 +62,7 @@ local function add(bagId, spot)
                     onSelect = function() CreateThread(function() Bag.OpenGround(bagId) end) end,
                 },
                 {
-                    name = 'street_uniformbag:collect:' .. bagId,
+                    name = 'vel_uniformbag:collect:' .. bagId,
                     icon = 'fa-solid fa-hand',
                     label = L('target.collect'),
                     distance = 2.0,
@@ -76,16 +76,16 @@ local function add(bagId, spot)
     spawned[bagId] = { obj = obj, zone = zone, spot = spot }
 end
 
-RegisterNetEvent('street_uniformbag:client:groundAdd', function(bagId, spot)
+RegisterNetEvent('vel_uniformbag:client:groundAdd', function(bagId, spot)
     if type(bagId) == 'string' and type(spot) == 'table' then add(bagId, spot) end
 end)
 
-RegisterNetEvent('street_uniformbag:client:groundRemove', function(bagId)
+RegisterNetEvent('vel_uniformbag:client:groundRemove', function(bagId)
     remove(bagId)
 end)
 
 local function sync()
-    local list = lib.callback.await('street_uniformbag:groundList', false) or {}
+    local list = lib.callback.await('vel_uniformbag:groundList', false) or {}
     for bagId in pairs(spawned) do
         if not list[bagId] then remove(bagId) end
     end

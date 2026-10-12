@@ -7,8 +7,8 @@ Decisões de origem: `00-DECISOES.md` (D1–D198).
 
 | Campo | Valor |
 |---|---|
-| Nome do sistema | Sistema de Bolsas de Uniformes — Street Roleplay |
-| Nome técnico | `street_uniformbag` (D14) — também o nome da pasta do recurso e do repositório GitHub privado (D167) |
+| Nome do sistema | Sistema de Bolsas de Uniformes |
+| Nome técnico | `vel_uniformbag` (D14) — também o nome da pasta do recurso e do repositório GitHub privado (D167) |
 | Descrição em uma frase | Bolsas físicas de uniforme, emitidas pelas organizações, que trocam a roupa do personagem pela farda oficial do cargo e guardam as roupas civis em compartimentos, com alerta e auditoria de uso indevido. |
 | Objetivo principal | Dar às organizações (Polícia, Hospital, Mecânica e futuras) uniformes oficiais por cargo, cadastrados sem editar código, entregues em bolsas rastreáveis que podem circular, ser perdidas ou roubadas no RP, com fiscalização automática do uso indevido. |
 

@@ -34,7 +34,7 @@ local function panelLocale()
     return t
 end
 
-RegisterNetEvent('street_uniformbag:client:panelOpen', function(data)
+RegisterNetEvent('vel_uniformbag:client:panelOpen', function(data)
     if (panelOpen and not embedded) or Bag.IsOpen() then return end
     embedded = false
     panelOpen = true
@@ -61,7 +61,7 @@ end)
 
 -- Página embutida no mri_Qadmin pede os dados iniciais (o mri_Qadmin cuida do foco da tela).
 RegisterNUICallback('panelBootstrap', function(_, cb)
-    local data = lib.callback.await('street_uniformbag:panel:bootstrap', false)
+    local data = lib.callback.await('vel_uniformbag:panel:bootstrap', false)
     if not data or data.error then
         return cb({ error = data and data.error or 'panel.no_access', message = L(data and data.error or 'panel.no_access') })
     end
@@ -73,7 +73,7 @@ end)
 RegisterNUICallback('panel', function(body, cb)
     if not panelOpen or type(body) ~= 'table' or not ALLOWED[body.fn] then return cb({ error = 'block.invalid_request' }) end
     local args = type(body.args) == 'table' and body.args or {}
-    local result = lib.callback.await('street_uniformbag:panel:' .. body.fn, false, table.unpack(args, 1, 4))
+    local result = lib.callback.await('vel_uniformbag:panel:' .. body.fn, false, table.unpack(args, 1, 4))
     if type(result) == 'table' and result.error then
         result.message = L(result.error)
     end
@@ -83,7 +83,7 @@ end)
 --- Loja de roupas gratuita, só roupas e acessórios (D206).
 RegisterNUICallback('openStore', function(_, cb)
     cb(true)
-    if not lib.callback.await('street_uniformbag:panel:canOpenStore', false) then return end
+    if not lib.callback.await('vel_uniformbag:panel:canOpenStore', false) then return end
 
     local wasEmbedded = embedded
     if wasEmbedded then
@@ -103,7 +103,7 @@ RegisterNUICallback('openStore', function(_, cb)
             TriggerServerEvent('illenium-appearance:server:saveAppearance', appearance)
         end
         if wasEmbedded then
-            pcall(function() exports.mri_Qadmin:OpenPlugin('street_uniformbag') end)
+            pcall(function() exports.mri_Qadmin:OpenPlugin('vel_uniformbag') end)
         elseif panelOpen then
             SendNUIMessage({ action = 'panelShow' })
             SetNuiFocus(true, true)

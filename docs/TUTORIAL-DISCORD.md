@@ -4,7 +4,7 @@ Copie só o texto entre as linhas de corte (sem as linhas ✂️).
 
 ✂️ ──────────── MENSAGEM 1/8 ────────────
 
-# 👜 Sistema de Bolsas de Uniformes — Street Roleplay
+# 👜 Sistema de Bolsas de Uniformes
 
 As organizações (Polícia, Hospital, Mecânica e as próximas) agora entregam a **farda oficial em bolsas**.
 

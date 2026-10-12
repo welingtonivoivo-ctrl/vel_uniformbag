@@ -44,7 +44,7 @@ Toda dependência abaixo foi **verificada na base local**; nada foi presumido.
 Webhooks e ACE ficam fora deste arquivo (convars privadas e server.cfg).
 
 ### Nome e versionamento (D167–D169)
-- Nome único em tudo: `street_uniformbag` — pasta `resources/[meus_scripts]/street_uniformbag`, `fxmanifest`, prefixos de eventos/callbacks (`street_uniformbag:*`), export do item (`street_uniformbag.useBag`), convars (`street_uniformbag_webhook_*`), ACE (`street_uniformbag.admin`/`.manage`) e repositório GitHub privado `welingtonivoivo-ctrl/street_uniformbag`.
+- Nome único em tudo: `vel_uniformbag` — pasta `resources/[meus_scripts]/vel_uniformbag`, `fxmanifest`, prefixos de eventos/callbacks (`vel_uniformbag:*`), export do item (`vel_uniformbag.useBag`), convars (`vel_uniformbag_webhook_*`), ACE (`vel_uniformbag.admin`/`.manage`) e repositório GitHub privado `welingtonivoivo-ctrl/vel_uniformbag`.
 - `.gitignore` mínimo: `*.log`, `*.bak`, `*.tmp`, `*.sql`, `*.zip`, `.env*`, `backup*/`, `node_modules/`, `.vscode/`, `secrets*`, `*.cfg` (nenhum arquivo de configuração privada vai ao repositório). O repositório leva só código, `config.lua` sem segredos, `docs/`, `README.md`, `CHANGELOG.md` e `art/` (fonte `.blend`, script Python do Blender que gera os renders, PNGs finais — D178). `art/` não é carregada pelo FiveM (fora do `fxmanifest`).
 - Ferramenta externa de produção (não é dependência de execução): Blender oficial, instalado só na etapa 3 com autorização (D176).
 
@@ -57,12 +57,12 @@ Webhooks e ACE ficam fora deste arquivo (convars privadas e server.cfg).
 | Lista de cargos | `exports.qbx_core:GetJobs()` (inclui os jobs e cargos criados no painel Jobs do mri_Qbossmenu, que os envia ao QBox por `CreateJobs`) — lida **a cada abertura do painel**, nunca guardada (D202) | Seleção de organização e graduações no cadastro |
 | Mudança de emprego | Eventos de servidor `QBCore:Server:OnJobUpdate (src, job)` e `qbx_core:server:onGroupUpdate (src, name, grade?)` | Reavaliação (D34, D41) |
 | Permissão admin | Registro: `exports.mri_Qadmin:RegisterPlugin({ ..., requiredPerms, permDefs })` (ou `RegisterPermissions`). Verificação: **natives ACE do FiveM** (`IsPlayerAceAllowed`, `IsPrincipalAceAllowed`) — o mri_Qadmin **não exporta** `HasPerms` (verificado na etapa 1, D199) | Permissão "Gerenciar Bolsas de Uniformes" (D79) |
-| ACE de emergência | `IsPlayerAceAllowed(src, 'street_uniformbag.admin')` | D82 |
+| ACE de emergência | `IsPlayerAceAllowed(src, 'vel_uniformbag.admin')` | D82 |
 | Aba no mri_Qadmin | `exports.mri_Qadmin:RegisterPlugin({ id, label, icon, resource, htmlPath, requiredPerms, permDefs })` | D88 |
 | Aparência (cliente) | `exports.mri_Qappearance:getPedAppearance(ped)`, `setPedComponents`, `setPedProps`, `getPedModel` | Captura e aplicação |
 | Persistência da aparência | evento `illenium-appearance:server:saveAppearance` (mesmo caminho das lojas de roupa) | Manter a roupa após reconexão |
 | Inventário | `ox_inventory` exports `AddItem`, `RemoveItem`, `GetSlot`, `SetMetadata`, `CanCarryItem`, `Search`, `GetInventory`, `registerHook` (`createItem`, `swapItems`, `usingItem`) | Item, emissão, rastreio |
-| Uso do item | `data/items.lua` do ox_inventory com `server = { export = 'street_uniformbag.useBag' }` | Gatilho de uso (D119) |
+| Uso do item | `data/items.lua` do ox_inventory com `server = { export = 'vel_uniformbag.useBag' }` | Gatilho de uso (D119) |
 | Imagem por organização | metadado `image` (nome do arquivo em `ox_inventory/web/images`, sem extensão), mecanismo já usado pelo próprio ox_inventory em `modules/items/server.lua`. Nome validado no servidor: `^[a-z0-9_]{1,60}$`, sem `/`, `\`, `..` ou extensão; arquivo precisa existir (`LoadResourceFile('ox_inventory', 'web/images/<nome>.png')`); inválido ou ausente ⇒ `uniform_bag` | D121, D174 |
 | Baús da organização | `exports.mri_Qbossmenu:GetManagedDefinition(nome, tipo)` → `stashes[]` (IDs registrados no ox_inventory); ou ID informado manualmente | Destino da emissão (D26) |
 | Interação | API `ox_target` (`addSphereZone`), atendida pelo mri_Qinteract | Pontos das sedes (D89) |
@@ -84,8 +84,8 @@ Webhooks e ACE ficam fora deste arquivo (convars privadas e server.cfg).
 
 | Perfil | Como é identificado (servidor) |
 |---|---|
-| Staff | Permissão `street_uniformbag.manage` concedida pelos grupos do mri_Qadmin, conferida com natives ACE pelos mesmos caminhos que o mri_Qadmin usa: `IsPlayerAceAllowed(src, nó)`, principal do personagem `char:<citizenid>`, principais de emprego `job.<nome>` / `job.<nome>.<grau>` e o bypass explícito `qadmin.master`. **Não** herda o acesso automático de `god`/`admin` (D82, D199). Só vale com o mri_Qadmin iniciado (D87). |
-| Emergência | ACE `street_uniformbag.admin` (`add_ace` explícito no server.cfg) |
+| Staff | Permissão `vel_uniformbag.manage` concedida pelos grupos do mri_Qadmin, conferida com natives ACE pelos mesmos caminhos que o mri_Qadmin usa: `IsPlayerAceAllowed(src, nó)`, principal do personagem `char:<citizenid>`, principais de emprego `job.<nome>` / `job.<nome>.<grau>` e o bypass explícito `qadmin.master`. **Não** herda o acesso automático de `god`/`admin` (D82, D199). Só vale com o mri_Qadmin iniciado (D87). |
+| Emergência | ACE `vel_uniformbag.admin` (`add_ace` explícito no server.cfg) |
 | Líder | `PlayerData.job.name == organização` **e** `PlayerData.job.isboss == true` |
 | Usuário da bolsa | Qualquer jogador com o item (sem permissão) |
 
@@ -98,13 +98,13 @@ Webhooks e ACE ficam fora deste arquivo (convars privadas e server.cfg).
 | Canal | Nome | Direção | Validação |
 |---|---|---|---|
 | Export servidor (uso do item) | `useBag` | ox_inventory → servidor | slot real do item no inventário do jogador; bolsa sem trava |
-| Callback | `street_uniformbag:openBag` | cliente → servidor | retorna dados da bolsa só para quem está com ela e com a trava |
-| Callback | `street_uniformbag:beginChange` | cliente → servidor | valida compatibilidade, espaço, duplicidade e autorização **antes** (D66); grava a operação `iniciada` no diário `sub_operations` com token (D182) |
-| Callback | `street_uniformbag:confirmChange` | cliente → servidor | token + resultado da aplicação; servidor grava em transação (D51) |
-| Callback | `street_uniformbag:cancelChange` | cliente → servidor | marca a operação como `revertida` e libera a trava (exceto em `finalizando`, D156) |
-| Callbacks | `street_uniformbag:panel:*` (listar, salvar uniforme, emitir, auditoria, configurações, pontos, recuperação) | NUI → cliente → servidor | perfil + escopo em todas |
-| Evento servidor→cliente | `street_uniformbag:client:*` (abrir NUI, objeto, cancelar) | servidor → cliente | — |
-| NUI | `fetch('https://street_uniformbag/...')` | NUI → cliente | cliente só repassa ao servidor |
+| Callback | `vel_uniformbag:openBag` | cliente → servidor | retorna dados da bolsa só para quem está com ela e com a trava |
+| Callback | `vel_uniformbag:beginChange` | cliente → servidor | valida compatibilidade, espaço, duplicidade e autorização **antes** (D66); grava a operação `iniciada` no diário `sub_operations` com token (D182) |
+| Callback | `vel_uniformbag:confirmChange` | cliente → servidor | token + resultado da aplicação; servidor grava em transação (D51) |
+| Callback | `vel_uniformbag:cancelChange` | cliente → servidor | marca a operação como `revertida` e libera a trava (exceto em `finalizando`, D156) |
+| Callbacks | `vel_uniformbag:panel:*` (listar, salvar uniforme, emitir, auditoria, configurações, pontos, recuperação) | NUI → cliente → servidor | perfil + escopo em todas |
+| Evento servidor→cliente | `vel_uniformbag:client:*` (abrir NUI, objeto, cancelar) | servidor → cliente | — |
+| NUI | `fetch('https://vel_uniformbag/...')` | NUI → cliente | cliente só repassa ao servidor |
 
 Sincronização: o objeto temporário é criado pelo cliente de quem usa como **objeto de rede** e removido no encerramento; o servidor registra o netId para remoção em caso de queda (D98, D99).
 
@@ -119,7 +119,7 @@ Sincronização: o objeto temporário é criado pelo cliente de quem usa como **
 | Contornar a verificação de farda pela troca | Compartimento guarda `uniform_id` quando a roupa é farda — decidido no servidor por "farda em uso" **ou** por coincidência das peças com versões de uniforme cadastradas (D184, D196); vestir dele passa pela autorização. |
 | Confirmação de aparência vinda do cliente | Limite assumido (D198): o servidor não vê o ped. Mitigações: a aparência guardada é a capturada no `beginChange` e fica no diário; checagem de formato/tamanho no servidor; marcação de farda no servidor (D196). Um cliente adulterado só consegue afetar a própria aparência; aparências não são itens econômicos. |
 | Alerta visível a terceiros | ps-dispatch entrega o alerta a todos os clientes e filtra no cliente (comportamento dele, não alterado). Por isso o alerta leva só o necessário (uniforme, local, código), nunca citizenid. O canal próprio envia só aos destinatários calculados no servidor. |
-| Duplicação de itens | **Correção (D191):** o hook `createItem` não bloqueia criação (só altera metadados, `ox_inventory/modules/items/server.lua:224-234`). Medidas reais: a emissão grava cada `bagId` no banco **antes** do `AddItem`; o hook marca como inválida toda bolsa criada por outro recurso (`resource ~= 'street_uniformbag'`) ou sem `bagId` reservado; bolsa inválida/desconhecida não tem efeito (D190). Emissão com chave de idempotência. Duplicidade: no uso e em cada movimentação, se o inventário atual difere do último registrado sem transferência registrada, o servidor confere o inventário anterior (se carregado) com `Search`; mesma `bagId` nos dois ⇒ `flagged_duplicate = 1`, uso bloqueado, auditoria `duplicacao` (D189). Inventário anterior não carregado (jogador offline) ⇒ registra "localização divergente" sem bloquear — detecção não exaustiva (D198). |
+| Duplicação de itens | **Correção (D191):** o hook `createItem` não bloqueia criação (só altera metadados, `ox_inventory/modules/items/server.lua:224-234`). Medidas reais: a emissão grava cada `bagId` no banco **antes** do `AddItem`; o hook marca como inválida toda bolsa criada por outro recurso (`resource ~= 'vel_uniformbag'`) ou sem `bagId` reservado; bolsa inválida/desconhecida não tem efeito (D190). Emissão com chave de idempotência. Duplicidade: no uso e em cada movimentação, se o inventário atual difere do último registrado sem transferência registrada, o servidor confere o inventário anterior (se carregado) com `Search`; mesma `bagId` nos dois ⇒ `flagged_duplicate = 1`, uso bloqueado, auditoria `duplicacao` (D189). Inventário anterior não carregado (jogador offline) ⇒ registra "localização divergente" sem bloquear — detecção não exaustiva (D198). |
 | Emissão não autorizada | Só pelo painel, com perfil validado; limites por lote configuráveis. |
 | Webhook exposto | URLs só em convars de servidor (`set`, nunca `setr`); nunca enviadas à NUI nem ao repositório (D76). |
 | SQL injection | Só consultas parametrizadas. |
@@ -144,7 +144,7 @@ Sincronização: o objeto temporário é criado pelo cliente de quem usa como **
 | T12 | Nome da rua calculado no **cliente de quem recebe** (`GetStreetNameAtCoord`) e ponto no mapa temporário (blip removido após tempo configurado) | D128 | Calcular no cliente do infrator | Rua é informativa; coordenadas continuam vindo do servidor |
 | T9 | Emissão gratuita, com **ponto de extensão** `IssueCostPolicy` (hoje sempre retorna custo 0) e campo reservado `unit_cost` no lote | D114–D116: cobrança futura sem refatorar | Integrar ps-banking já | Nenhuma dependência financeira nesta versão |
 | T13 | Inatividade por coluna `last_activity_at` + rotina periódica com uma única consulta indexada | D163–D165: barato e sobrevive a reinícios (estado no banco) | Verificar bolsas uma a uma / timers por bolsa | Classificação pode atrasar até 6 h — aceitável por ser só administrativa |
-| T8 | Reavaliação pelos eventos do QBox + escuta passiva de `illenium-appearance:server:saveAppearance` (registrada também com `RegisterNetEvent` no `street_uniformbag`, sem alterar o mri_Qappearance) + conferência do corpo via callback ao cliente na mudança de cargo | D138–D143 | Só uma das duas fontes | Matriz de decisão D141; resposta do cliente nunca encerra registro sozinha |
+| T8 | Reavaliação pelos eventos do QBox + escuta passiva de `illenium-appearance:server:saveAppearance` (registrada também com `RegisterNetEvent` no `vel_uniformbag`, sem alterar o mri_Qappearance) + conferência do corpo via callback ao cliente na mudança de cargo | D138–D143 | Só uma das duas fontes | Matriz de decisão D141; resposta do cliente nunca encerra registro sozinha |
 
 ## 8. Limitações conhecidas
 

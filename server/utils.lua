@@ -3,15 +3,15 @@
 Utils = {}
 
 function Utils.Log(msg)
-    print('^5[street_uniformbag]^7 ' .. msg)
+    print('^5[vel_uniformbag]^7 ' .. msg)
 end
 
 function Utils.Warn(msg)
-    print('^3[street_uniformbag]^7 ' .. msg)
+    print('^3[vel_uniformbag]^7 ' .. msg)
 end
 
 function Utils.Error(msg)
-    print('^1[street_uniformbag]^7 ' .. msg)
+    print('^1[vel_uniformbag]^7 ' .. msg)
 end
 
 --- Colunas TINYINT(1) chegam do oxmysql como boolean; aceita também 1/0 (D200).

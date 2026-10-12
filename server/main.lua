@@ -2,7 +2,7 @@
 -- (só tabelas sub_*) e registra a permissão de staff no mri_Qadmin.
 
 local RESOURCE = GetCurrentResourceName()
-local PREFIX = '^5[street_uniformbag]^7 '
+local PREFIX = '^5[vel_uniformbag]^7 '
 
 local function log(msg)
     print(PREFIX .. msg)
@@ -67,7 +67,7 @@ end
 -- Só registra no console; um relatório por jogador a cada início do recurso.
 local propReported = {}
 
-RegisterNetEvent('street_uniformbag:server:propCheck', function(inCdImage, isValid, loaded)
+RegisterNetEvent('vel_uniformbag:server:propCheck', function(inCdImage, isValid, loaded)
     local src = source
     if propReported[src] then return end
     propReported[src] = true

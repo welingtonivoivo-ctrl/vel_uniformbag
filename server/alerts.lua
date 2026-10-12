@@ -82,7 +82,7 @@ local function sendJobNotify(incident, settings, uniform, street)
         local job = data and data.job
         if job and nameSet[job.name] and (not onlyOnDuty or job.onduty)
             and not receivesPsDispatch(job, psTypes) then
-            TriggerClientEvent('street_uniformbag:client:alert', id, {
+            TriggerClientEvent('vel_uniformbag:client:alert', id, {
                 id = incident.id,
                 uniform = uniform.name,
                 bagId = incident.bag_id,

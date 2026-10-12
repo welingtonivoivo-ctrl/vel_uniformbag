@@ -2,7 +2,7 @@
 
 Versão: 1.1 (consolidada, para aprovação geral) — 2026-10-12
 Ambiente de desenvolvimento e testes: base local `base_trabalho` (banco local `base_trabalho`). A VPS só é tocada na etapa 6, com autorização.
-Versionamento: repositório privado `welingtonivoivo-ctrl/street_uniformbag`, primeira publicação só após autorização (regra 15.4, D167–D169).
+Versionamento: repositório privado `welingtonivoivo-ctrl/vel_uniformbag`, primeira publicação só após autorização (regra 15.4, D167–D169).
 **Autorizações:** a aprovação geral deste planejamento **não** autoriza nenhuma etapa. Cada etapa começa só com sua autorização expressa; ações sensíveis dentro dela (publicar no GitHub, instalar o Blender, alterar o `items.lua`, copiar imagens, criar tabelas, mexer na VPS) pedem autorização própria no momento. O servidor local é iniciado/reiniciado **por você** (instalador MRI); eu não inicio o FXServer.
 
 ## Etapa 1 — Preparação
@@ -10,16 +10,16 @@ Versionamento: repositório privado `welingtonivoivo-ctrl/street_uniformbag`, pr
 - **Arquivos:** `fxmanifest.lua`, `shared/config.lua` (todas as chaves do TRD §1), `shared/locale.lua`, `server/main.lua` (vazio funcional), `client/main.lua`, `web/` (esqueleto), `.gitignore`, `README.md`, `CHANGELOG.md`.
 - **Dependências:** ox_lib, oxmysql, qbx_core, ox_inventory, mri_Qappearance, mri_Qinteract (pontos); opcionais mri_Qadmin, ps-dispatch, mri_Qbossmenu.
 - **Criado:** recurso que inicia sem erros e registra no log as dependências encontradas; verificação em jogo de que o modelo `reh_prop_reh_bag_outfit_01a` existe (`IsModelInCdimage`) — senão, propor alternativa (D96).
-- **Resultado esperado:** `ensure street_uniformbag` sobe limpo no servidor local.
+- **Resultado esperado:** `ensure vel_uniformbag` sobe limpo no servidor local.
 - **Aceitação:** zero erros no console do servidor e do cliente; modelo confirmado ou alternativa apresentada.
 - **Testes:** você sobe o servidor local; eu leio `fxserver.log` e o log do cliente.
 - **Riscos:** baixo. **Reverter:** remover a pasta do recurso.
-- **Git (D167–D169):** (1) `gh repo view welingtonivoivo-ctrl/street_uniformbag` para confirmar que não existe; (2) `git init` na pasta `street_uniformbag`, `.gitignore` conforme TRD; (3) conferir a lista de arquivos preparados (sem segredos, backups, logs, dumps); (4) **só com sua autorização da primeira publicação:** criar o repositório **privado** e enviar o primeiro commit em pt-BR. Sem force push. Nada na VPS.
+- **Git (D167–D169):** (1) `gh repo view welingtonivoivo-ctrl/vel_uniformbag` para confirmar que não existe; (2) `git init` na pasta `vel_uniformbag`, `.gitignore` conforme TRD; (3) conferir a lista de arquivos preparados (sem segredos, backups, logs, dumps); (4) **só com sua autorização da primeira publicação:** criar o repositório **privado** e enviar o primeiro commit em pt-BR. Sem force push. Nada na VPS.
 
 ## Etapa 2 — Dados e permissões
 - **Objetivo:** tabelas, permissões, perfis.
 - **Arquivos:** `server/db/migrations.lua`, `server/db/*.lua` (acesso por tabela), `server/permissions.lua`.
-- **Criado:** migração v1 (14 tabelas `sub_*` do `05-BACKEND.md`, incluindo o diário `sub_operations`, com chaves estrangeiras sem cascata a partir da bolsa — D188), idempotente; registro da permissão "Gerenciar Bolsas de Uniformes" no mri_Qadmin; ACE `street_uniformbag.admin`; função única `GetProfile(src, org)` → staff / emergência / líder / nenhum.
+- **Criado:** migração v1 (14 tabelas `sub_*` do `05-BACKEND.md`, incluindo o diário `sub_operations`, com chaves estrangeiras sem cascata a partir da bolsa — D188), idempotente; registro da permissão "Gerenciar Bolsas de Uniformes" no mri_Qadmin; ACE `vel_uniformbag.admin`; função única `GetProfile(src, org)` → staff / emergência / líder / nenhum.
 - **Resultado:** tabelas criadas no banco **local** (com sua autorização); perfis corretos.
 - **Aceitação:** migração roda 2× sem erro nem duplicação; permissão aparece em Perms; líder só obtém a própria organização; mri_Qadmin parado ⇒ staff negada (falha fechada).
 - **Testes:** reiniciar o recurso; alternar a permissão de um grupo no mri_Qadmin; parar o mri_Qadmin e repetir.
@@ -93,7 +93,7 @@ Versionamento: repositório privado `welingtonivoivo-ctrl/street_uniformbag`, pr
 | # | Verificação | Etapa | Se falhar |
 |---|---|---|---|
 | V1 | Modelo `reh_prop_reh_bag_outfit_01a` existe no jogo (`IsModelInCdimage`) | 1 | **Concluída 2026-10-12:** existe, é válido e carrega (D200) |
-| V2 | Repositório `street_uniformbag` ainda não existe na conta | 1 | **Concluída 2026-10-12:** não existe (consulta `gh repo view`, nada criado) |
+| V2 | Repositório `vel_uniformbag` ainda não existe na conta | 1 | **Concluída 2026-10-12:** não existe (consulta `gh repo view`, nada criado) |
 | V3 | Assinaturas exatas de `RegisterPermissions`/`HasPerms`/`RegisterPlugin` em execução | 1–2 | **Concluída 2026-10-12:** `HasPerms` não é exportado; verificação por natives ACE (D199). Em execução: permissão aparece em Perms, staff reconhecida pelo grupo God, negada com o mri_Qadmin parado, re-registrada quando ele reinicia |
 | V4 | Formato exato do retorno de `getPedAppearance` (para guardar aparência completa e comparar peças) | 3 | Ajustar o mapeamento em `config.lua` |
 | V5 | Chegada de `illenium-appearance:server:saveAppearance` a um segundo ouvinte (`RegisterNetEvent` no nosso recurso) | 3 | Plano B: confirmação de salvamento pelo nosso próprio callback após o `save` |

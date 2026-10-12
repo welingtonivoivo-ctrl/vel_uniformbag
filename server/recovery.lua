@@ -10,7 +10,7 @@ local function isAdmin(src)
 end
 
 --- Busca personagens (online ou offline) por citizenid ou nome — só leitura da tabela do QBox.
-lib.callback.register('street_uniformbag:panel:findCharacter', function(src, query)
+lib.callback.register('vel_uniformbag:panel:findCharacter', function(src, query)
     if not isAdmin(src) then return { error = 'cmd.no_permission' } end
     if type(query) ~= 'string' or #query < 2 or #query > 60 then return { results = {} } end
     local like = '%' .. query:gsub('[%%_]', '') .. '%'
@@ -26,7 +26,7 @@ end)
 
 --- Roupas que podem ser devolvidas a um personagem: o que ele vestia antes de cada troca pela bolsa
 --- (diário de operações) e o que está nos compartimentos guardados por ele.
-lib.callback.register('street_uniformbag:panel:recoverySources', function(src, citizenid)
+lib.callback.register('vel_uniformbag:panel:recoverySources', function(src, citizenid)
     if not isAdmin(src) then return { error = 'cmd.no_permission' } end
     if type(citizenid) ~= 'string' or #citizenid > 60 then return { sources = {} } end
 
@@ -66,7 +66,7 @@ local function sourceAppearance(sourceType, sourceId, citizenid)
     return nil
 end
 
-lib.callback.register('street_uniformbag:panel:createRecovery', function(src, citizenid, sourceType, sourceId, reason)
+lib.callback.register('vel_uniformbag:panel:createRecovery', function(src, citizenid, sourceType, sourceId, reason)
     if not isAdmin(src) then return { error = 'cmd.no_permission' } end
     if type(reason) ~= 'string' or #reason:gsub('%s', '') < 10 or #reason > 500 then return { error = 'recovery.reason_required' } end
 
@@ -82,11 +82,11 @@ lib.callback.register('street_uniformbag:panel:createRecovery', function(src, ci
 
     -- Se o personagem estiver online, o aviso aparece na hora (D149).
     local target = exports.qbx_core:GetPlayerByCitizenId(citizenid)
-    if target then TriggerClientEvent('street_uniformbag:client:recoveryPending', target.PlayerData.source) end
+    if target then TriggerClientEvent('vel_uniformbag:client:recoveryPending', target.PlayerData.source) end
     return { ok = true, id = id }
 end)
 
-lib.callback.register('street_uniformbag:panel:cancelRecovery', function(src, id)
+lib.callback.register('vel_uniformbag:panel:cancelRecovery', function(src, id)
     if not isAdmin(src) then return { error = 'cmd.no_permission' } end
     local changed = MySQL.update.await("UPDATE `sub_recoveries` SET `status` = 'cancelada' WHERE `id` = ? AND `status` = 'aguardando'", { tonumber(id) })
     if changed ~= 1 then return { error = 'recovery.not_pending' } end
@@ -98,7 +98,7 @@ end)
 -- Lado do jogador (D149–D151, D159): só o próprio personagem, sempre com confirmação.
 ------------------------------------------------------------------------------------------------
 
-lib.callback.register('street_uniformbag:recoveryPending', function(src)
+lib.callback.register('vel_uniformbag:recoveryPending', function(src)
     local data = Utils.GetPlayerData(src)
     if not data then return nil end
     return MySQL.single.await(
@@ -107,7 +107,7 @@ lib.callback.register('street_uniformbag:recoveryPending', function(src)
 end)
 
 --- Entrega a roupa só ao dono da recuperação pendente.
-lib.callback.register('street_uniformbag:recoveryFetch', function(src, id)
+lib.callback.register('vel_uniformbag:recoveryFetch', function(src, id)
     local data = Utils.GetPlayerData(src)
     if not data then return nil end
     local row = MySQL.single.await(
@@ -117,7 +117,7 @@ lib.callback.register('street_uniformbag:recoveryFetch', function(src, id)
 end)
 
 --- Conclusão: só quando o cliente confirma que aplicou; impede aplicação duplicada (D150, D151).
-lib.callback.register('street_uniformbag:recoveryConfirm', function(src, id, rawPrevious)
+lib.callback.register('vel_uniformbag:recoveryConfirm', function(src, id, rawPrevious)
     local data = Utils.GetPlayerData(src)
     if not data then return false end
     local previous = Clothing.Sanitize(rawPrevious)

@@ -3,7 +3,7 @@
 'use strict';
 
 (() => {
-    const RES = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'street_uniformbag';
+    const RES = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'vel_uniformbag';
     const MODELS = [['mp_m_freemode_01', 'male'], ['mp_f_freemode_01', 'female']];
 
     let P = null; // { data, t, org, tab, uniforms, edit, stashes }

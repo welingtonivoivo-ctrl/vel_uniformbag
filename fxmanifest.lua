@@ -2,10 +2,10 @@ fx_version 'cerulean'
 game 'gta5'
 lua54 'yes'
 
-name 'street_uniformbag'
-author 'Street Roleplay'
-description 'Sistema de Bolsas de Uniformes do Street Roleplay'
-version '0.3.0'
+name 'vel_uniformbag'
+author 'Vel'
+description 'Sistema de Bolsas de Uniformes para servidores FiveM (QBox)'
+version '0.4.0'
 
 shared_scripts {
     '@ox_lib/init.lua',

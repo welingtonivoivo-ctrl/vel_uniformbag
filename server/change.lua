@@ -99,7 +99,7 @@ function Change.OpenFromGround(src, bagId, justPlaced)
     local jobs = exports.qbx_core:GetJobs()
     local slotsOut = Change.SlotsView(bag.bag_id)
 
-    TriggerClientEvent('street_uniformbag:client:open', src, {
+    TriggerClientEvent('vel_uniformbag:client:open', src, {
         bagId = bag.bag_id,
         uniform = {
             name = uniform and uniform.name or '?',
@@ -129,12 +129,12 @@ end)
 -- Callbacks da tela
 ------------------------------------------------------------------------------------------------
 
-lib.callback.register('street_uniformbag:renewLock', function(src, bagId)
+lib.callback.register('vel_uniformbag:renewLock', function(src, bagId)
     if blockedReason(src) then return false end
     return Locks.Renew(bagId, src)
 end)
 
-lib.callback.register('street_uniformbag:close', function(src, bagId)
+lib.callback.register('vel_uniformbag:close', function(src, bagId)
     for token, op in pairs(pending) do
         if op.src == src and op.bagId == bagId and not op.finalizing then
             MySQL.update.await("UPDATE `sub_operations` SET `state` = 'revertida', `finished_at` = NOW(3) WHERE `token` = ? AND `state` = 'iniciada'", { token })
@@ -146,7 +146,7 @@ end)
 
 --- Fase 1: pré-checagem e diário (D66, D182).
 ---@param kind 'uniforme'|'compartimento'
-lib.callback.register('street_uniformbag:beginChange', function(src, bagId, kind, slotNo, rawCurrent)
+lib.callback.register('vel_uniformbag:beginChange', function(src, bagId, kind, slotNo, rawCurrent)
     if not Database.Ready then return { error = 'block.unavailable' } end
     if type(bagId) ~= 'string' or not Locks.Holds(bagId, src) then return { error = 'block.lock_lost' } end
     if not Ground.Get(bagId) then return { error = 'block.no_bag' } end
@@ -214,7 +214,7 @@ lib.callback.register('street_uniformbag:beginChange', function(src, bagId, kind
 end)
 
 --- Fase 2: confirmação e transação (D51, D180–D184, D194).
-lib.callback.register('street_uniformbag:confirmChange', function(src, token, applied, street)
+lib.callback.register('vel_uniformbag:confirmChange', function(src, token, applied, street)
     -- Nome da rua vindo do cliente: só informativo no alerta; coordenadas sempre do servidor.
     street = type(street) == 'string' and street:gsub('[%c<>]', ''):sub(1, 80) or nil
     if street == '' then street = nil end
@@ -313,7 +313,7 @@ lib.callback.register('street_uniformbag:confirmChange', function(src, token, ap
 end)
 
 --- Roupa para a prévia (D204): só para quem está com a bolsa travada e no próprio modelo.
-lib.callback.register('street_uniformbag:previewData', function(src, bagId, kind, slotNo, model)
+lib.callback.register('vel_uniformbag:previewData', function(src, bagId, kind, slotNo, model)
     if type(bagId) ~= 'string' or not Locks.Holds(bagId, src) then return nil end
     if type(model) ~= 'string' or not Clothing.IsSupportedModel(model) then return nil end
     local bag = Bags.Get(bagId)
@@ -341,7 +341,7 @@ function Change.RevertInterrupted()
 end
 
 --- Chamado pelo cliente depois que o personagem e a aparência carregam.
-lib.callback.register('street_uniformbag:recoveryCheck', function(src)
+lib.callback.register('vel_uniformbag:recoveryCheck', function(src)
     local data = Utils.GetPlayerData(src)
     if not data then return nil end
 

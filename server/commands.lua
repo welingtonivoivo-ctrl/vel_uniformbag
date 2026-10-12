@@ -11,7 +11,7 @@ local function allowed(src, org)
 end
 
 local function captureClothing(src)
-    local raw = lib.callback.await('street_uniformbag:client:capture', src)
+    local raw = lib.callback.await('vel_uniformbag:client:capture', src)
     return Clothing.Sanitize(raw)
 end
 

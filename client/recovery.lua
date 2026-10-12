@@ -4,7 +4,7 @@ local busy = false
 
 local function offer(silentIfNone)
     if busy then return end
-    local pending = lib.callback.await('street_uniformbag:recoveryPending', false)
+    local pending = lib.callback.await('vel_uniformbag:recoveryPending', false)
     if not pending then
         if not silentIfNone then lib.notify({ type = 'inform', description = L('recovery.none') }) end
         return
@@ -24,7 +24,7 @@ local function offer(silentIfNone)
         return lib.notify({ type = 'inform', description = L('recovery.later_hint', Config.RecoveryCommand) })
     end
 
-    local clothing = lib.callback.await('street_uniformbag:recoveryFetch', false, pending.id)
+    local clothing = lib.callback.await('vel_uniformbag:recoveryFetch', false, pending.id)
     if not clothing then
         busy = false
         return lib.notify({ type = 'error', description = L('recovery.failed') })
@@ -37,7 +37,7 @@ local function offer(silentIfNone)
         return lib.notify({ type = 'error', description = L('recovery.failed') })
     end
 
-    if lib.callback.await('street_uniformbag:recoveryConfirm', false, pending.id, previous) then
+    if lib.callback.await('vel_uniformbag:recoveryConfirm', false, pending.id, previous) then
         Appearance.Save()
         lib.notify({ type = 'success', description = L('recovery.done') })
     else
@@ -49,7 +49,7 @@ end
 
 RegisterCommand(Config.RecoveryCommand, function() CreateThread(function() offer(false) end) end, false)
 
-RegisterNetEvent('street_uniformbag:client:recoveryPending', function()
+RegisterNetEvent('vel_uniformbag:client:recoveryPending', function()
     CreateThread(function() offer(true) end)
 end)
 

@@ -19,9 +19,9 @@ local function checkPropModel()
     end
 
     local key = (inCdImage and isValid and loaded) and 'prop.ok' or 'prop.missing'
-    print(('[street_uniformbag] %s'):format(L(key, Config.PropModel, GetPlayerServerId(PlayerId()), tostring(inCdImage), tostring(isValid), tostring(loaded))))
+    print(('[vel_uniformbag] %s'):format(L(key, Config.PropModel, GetPlayerServerId(PlayerId()), tostring(inCdImage), tostring(isValid), tostring(loaded))))
 
-    TriggerServerEvent('street_uniformbag:server:propCheck', inCdImage, isValid, loaded)
+    TriggerServerEvent('vel_uniformbag:server:propCheck', inCdImage, isValid, loaded)
 end
 
 CreateThread(function()

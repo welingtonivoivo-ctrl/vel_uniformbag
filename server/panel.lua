@@ -77,11 +77,11 @@ function Panel.Open(src, onlyOrg)
     if not data then
         return TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = L(err) })
     end
-    TriggerClientEvent('street_uniformbag:client:panelOpen', src, data)
+    TriggerClientEvent('vel_uniformbag:client:panelOpen', src, data)
 end
 
 -- Versão embutida na aba Plugins do mri_Qadmin: a página pede os dados iniciais.
-lib.callback.register('street_uniformbag:panel:bootstrap', function(src)
+lib.callback.register('vel_uniformbag:panel:bootstrap', function(src)
     local data, err = Panel.Bootstrap(src)
     return data or { error = err }
 end)
@@ -99,7 +99,7 @@ end, false)
 -- Uniformes
 ------------------------------------------------------------------------------------------------
 
-lib.callback.register('street_uniformbag:panel:uniforms', function(src, org)
+lib.callback.register('vel_uniformbag:panel:uniforms', function(src, org)
     local ok, err = guard(src, org)
     if not ok then return { error = err } end
 
@@ -119,7 +119,7 @@ lib.callback.register('street_uniformbag:panel:uniforms', function(src, org)
 end)
 
 --- Criar ou editar (nome, modo de autorização, cargos, ativo). A roupa é gravada à parte.
-lib.callback.register('street_uniformbag:panel:saveUniform', function(src, form)
+lib.callback.register('vel_uniformbag:panel:saveUniform', function(src, form)
     if type(form) ~= 'table' then return { error = 'block.invalid_request' } end
     local ok, err = guard(src, form.org)
     if not ok then return { error = err } end
@@ -171,20 +171,20 @@ lib.callback.register('street_uniformbag:panel:saveUniform', function(src, form)
 end)
 
 --- Grava a roupa que o jogador está vestindo como versão do uniforme (D17, D57–D59).
-lib.callback.register('street_uniformbag:panel:captureVariant', function(src, uniformId)
+lib.callback.register('vel_uniformbag:panel:captureVariant', function(src, uniformId)
     local uniform = Uniforms.Get(tonumber(uniformId))
     if not uniform then return { error = 'cmd.uniform_unknown' } end
     local ok, err = guard(src, uniform.org)
     if not ok then return { error = err } end
 
-    local clothing = Clothing.Sanitize(lib.callback.await('street_uniformbag:client:capture', src))
+    local clothing = Clothing.Sanitize(lib.callback.await('vel_uniformbag:client:capture', src))
     if not clothing then return { error = 'block.appearance_invalid' } end
 
     Uniforms.SaveVariant(src, uniform.id, clothing)
     return { ok = true, model = clothing.model }
 end)
 
-lib.callback.register('street_uniformbag:panel:removeVariant', function(src, uniformId, model)
+lib.callback.register('vel_uniformbag:panel:removeVariant', function(src, uniformId, model)
     local uniform = Uniforms.Get(tonumber(uniformId))
     if not uniform then return { error = 'cmd.uniform_unknown' } end
     local ok, err = guard(src, uniform.org)
@@ -195,7 +195,7 @@ lib.callback.register('street_uniformbag:panel:removeVariant', function(src, uni
 end)
 
 --- Roupa de uma versão, para vestir e conferir (pré-visualização no próprio personagem).
-lib.callback.register('street_uniformbag:panel:variant', function(src, uniformId, model)
+lib.callback.register('vel_uniformbag:panel:variant', function(src, uniformId, model)
     local uniform = Uniforms.Get(tonumber(uniformId))
     if not uniform then return nil end
     if not guard(src, uniform.org) then return nil end
@@ -207,7 +207,7 @@ end)
 ------------------------------------------------------------------------------------------------
 
 --- Baús da organização registrados no mri_Qbossmenu (D26); a configuração manual vem na parte 2.
-lib.callback.register('street_uniformbag:panel:stashes', function(src, org)
+lib.callback.register('vel_uniformbag:panel:stashes', function(src, org)
     if not guard(src, org) then return {} end
     local list = {}
     if GetResourceState('mri_Qbossmenu') == 'started' then
@@ -224,7 +224,7 @@ lib.callback.register('street_uniformbag:panel:stashes', function(src, org)
     return list
 end)
 
-lib.callback.register('street_uniformbag:panel:issue', function(src, uniformId, qty, stashId)
+lib.callback.register('vel_uniformbag:panel:issue', function(src, uniformId, qty, stashId)
     local result, err = Issue.Run(src, tonumber(uniformId), tonumber(qty), stashId)
     if not result then return { error = err } end
     return { ok = true, result = result }
@@ -234,7 +234,7 @@ end)
 -- Bolsas (estoque e rastreio)
 ------------------------------------------------------------------------------------------------
 
-lib.callback.register('street_uniformbag:panel:bags', function(src, org, filter)
+lib.callback.register('vel_uniformbag:panel:bags', function(src, org, filter)
     local ok, err = guard(src, org)
     if not ok then return { error = err } end
     filter = type(filter) == 'table' and filter or {}
@@ -267,7 +267,7 @@ lib.callback.register('street_uniformbag:panel:bags', function(src, org, filter)
     return { bags = rows, counts = counts }
 end)
 
-lib.callback.register('street_uniformbag:panel:bagHistory', function(src, bagId)
+lib.callback.register('vel_uniformbag:panel:bagHistory', function(src, bagId)
     local bag = Bags.Get(bagId)
     if not bag then return { error = 'block.unrecognized' } end
     local ok, err = guard(src, bag.org)
@@ -285,7 +285,7 @@ end)
 ------------------------------------------------------------------------------------------------
 
 --- Configuração atual + listas reais do QBox para escolher (tipos e nomes de empregos).
-lib.callback.register('street_uniformbag:panel:alertSettings', function(src, org)
+lib.callback.register('vel_uniformbag:panel:alertSettings', function(src, org)
     local ok, err = guard(src, org)
     if not ok then return { error = err } end
 
@@ -316,7 +316,7 @@ lib.callback.register('street_uniformbag:panel:alertSettings', function(src, org
     }
 end)
 
-lib.callback.register('street_uniformbag:panel:saveAlertSettings', function(src, org, form)
+lib.callback.register('vel_uniformbag:panel:saveAlertSettings', function(src, org, form)
     local ok, err = guard(src, org)
     if not ok then return { error = err } end
     if type(form) ~= 'table' then return { error = 'block.invalid_request' } end
@@ -361,7 +361,7 @@ end)
 -- Auditoria (D71, D72, D161): consulta paginada; líder só da própria organização.
 ------------------------------------------------------------------------------------------------
 
-lib.callback.register('street_uniformbag:panel:audit', function(src, org, filter)
+lib.callback.register('vel_uniformbag:panel:audit', function(src, org, filter)
     local ok, err = guard(src, org)
     if not ok then return { error = err } end
     filter = type(filter) == 'table' and filter or {}
@@ -401,6 +401,6 @@ end)
 -- Loja de roupas (D206): só confere o perfil; o editor abre no cliente.
 ------------------------------------------------------------------------------------------------
 
-lib.callback.register('street_uniformbag:panel:canOpenStore', function(src)
+lib.callback.register('vel_uniformbag:panel:canOpenStore', function(src)
     return Permissions.GetProfile(src, nil) ~= nil or #orgsFor(src) > 0
 end)

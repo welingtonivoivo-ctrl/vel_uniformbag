@@ -21,15 +21,15 @@ function Points.Load()
 end
 
 local function broadcast()
-    TriggerClientEvent('street_uniformbag:client:points', -1, list)
+    TriggerClientEvent('vel_uniformbag:client:points', -1, list)
 end
 
-lib.callback.register('street_uniformbag:pointsList', function()
+lib.callback.register('vel_uniformbag:pointsList', function()
     return list
 end)
 
 --- Abrir o painel por um ponto: precisa estar perto e ser líder da organização (ou staff).
-lib.callback.register('street_uniformbag:openFromPoint', function(src, pointId)
+lib.callback.register('vel_uniformbag:openFromPoint', function(src, pointId)
     local point = list[tonumber(pointId)]
     if not point then return false end
     local ped = GetPlayerPed(src)
@@ -46,7 +46,7 @@ end)
 -- Aba Pontos do painel
 ------------------------------------------------------------------------------------------------
 
-lib.callback.register('street_uniformbag:panel:points', function(src, org)
+lib.callback.register('vel_uniformbag:panel:points', function(src, org)
     if not Permissions.GetProfile(src, org) then return { error = 'cmd.no_permission' } end
     local rows = MySQL.query.await(
         'SELECT `id`, `label`, `x`, `y`, `z`, `radius`, `active`, `created_at` FROM `sub_points` WHERE `org` = ? ORDER BY `id`', { org }) or {}
@@ -55,7 +55,7 @@ lib.callback.register('street_uniformbag:panel:points', function(src, org)
 end)
 
 --- Novo ponto na posição atual de quem cadastra (só staff — D92).
-lib.callback.register('street_uniformbag:panel:addPoint', function(src, org, label)
+lib.callback.register('vel_uniformbag:panel:addPoint', function(src, org, label)
     if not isAdmin(src) then return { error = 'cmd.no_permission' } end
     local jobs = exports.qbx_core:GetJobs() or {}
     if not jobs[org] then return { error = 'cmd.org_unknown' } end
@@ -75,7 +75,7 @@ lib.callback.register('street_uniformbag:panel:addPoint', function(src, org, lab
     return { ok = true, id = id }
 end)
 
-lib.callback.register('street_uniformbag:panel:togglePoint', function(src, id, active)
+lib.callback.register('vel_uniformbag:panel:togglePoint', function(src, id, active)
     if not isAdmin(src) then return { error = 'cmd.no_permission' } end
     local row = MySQL.single.await('SELECT `org` FROM `sub_points` WHERE `id` = ?', { tonumber(id) })
     if not row then return { error = 'block.invalid_request' } end

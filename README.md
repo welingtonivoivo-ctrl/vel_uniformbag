@@ -1,6 +1,6 @@
-# street_uniformbag — Sistema de Bolsas de Uniformes
+# vel_uniformbag — Sistema de Bolsas de Uniformes
 
-Recurso do **Street Roleplay** (FiveM / QBox) para bolsas físicas de uniforme: emitidas pelas organizações, trocam a roupa do personagem pela farda oficial do cargo, guardam as roupas civis em compartimentos e registram alertas e auditoria de uso indevido.
+Recurso para servidores **FiveM / QBox** para bolsas físicas de uniforme: emitidas pelas organizações, trocam a roupa do personagem pela farda oficial do cargo, guardam as roupas civis em compartimentos e registram alertas e auditoria de uso indevido.
 
 > **Situação:** etapa 1 (preparação). Ainda sem funcionalidades para o jogador.
 
@@ -25,8 +25,8 @@ Opcionais: `mri_Qadmin` (painel da staff), `ps-dispatch` (alertas), `mri_Qbossme
 
 ## Instalação
 
-1. A pasta precisa se chamar exatamente `street_uniformbag`, dentro de `resources/[meus_scripts]/`.
-2. `ensure street_uniformbag` depois das dependências.
+1. A pasta precisa se chamar exatamente `vel_uniformbag`, dentro de `resources/[meus_scripts]/`.
+2. `ensure vel_uniformbag` depois das dependências.
 3. Webhooks do Discord e a ACE de emergência ficam **somente** no `server.cfg` do servidor (convars privadas), nunca neste repositório.
 
 ## Configuração

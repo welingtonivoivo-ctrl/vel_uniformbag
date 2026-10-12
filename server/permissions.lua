@@ -4,8 +4,8 @@
 
 Permissions = {}
 
-local PERM_MANAGE = 'street_uniformbag.manage'
-local PERM_EMERGENCY = 'street_uniformbag.admin'
+local PERM_MANAGE = 'vel_uniformbag.manage'
+local PERM_EMERGENCY = 'vel_uniformbag.admin'
 local QADMIN_MASTER = 'qadmin.master'
 
 Permissions.Nodes = {
@@ -14,7 +14,7 @@ Permissions.Nodes = {
 }
 
 local function log(msg)
-    print('^5[street_uniformbag]^7 ' .. msg)
+    print('^5[vel_uniformbag]^7 ' .. msg)
 end
 
 local function getPlayerData(src)
@@ -91,7 +91,7 @@ local function registerWithQadmin()
             {
                 { id = PERM_MANAGE, label = L('perm.manage_label'), desc = L('perm.manage_desc') },
             },
-            { id = 'street_uniformbag', label = L('perm.category_label') }
+            { id = 'vel_uniformbag', label = L('perm.category_label') }
         )
     end)
 
@@ -104,7 +104,7 @@ local function registerWithQadmin()
     -- Aba "Bolsas de Uniformes" em Plugins do mri_Qadmin (D88): carrega web/plugin.html deste recurso.
     ok, err = pcall(function()
         exports.mri_Qadmin:RegisterPlugin({
-            id = 'street_uniformbag',
+            id = 'vel_uniformbag',
             label = L('perm.category_label'),
             icon = 'shirt',
             resource = GetCurrentResourceName(),

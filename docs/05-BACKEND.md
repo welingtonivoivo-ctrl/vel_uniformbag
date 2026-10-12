@@ -121,7 +121,7 @@ PK: `(bag_id, slot_no)`. Compartimento livre = linha inexistente.
 | default_stash_id | VARCHAR(80) | não | baú padrão da emissão |
 | item_image | VARCHAR(60) | não | nome da imagem do item da organização; vazio, inválido ou arquivo inexistente = `uniform_bag` (padrão roxa); validado no servidor antes de gravar (D121, D174) |
 | updated_by / updated_at | VARCHAR(60) / TIMESTAMP | não | |
-O endereço do webhook **não** fica no banco: fica na convar privada `street_uniformbag_webhook_<org>` / `street_uniformbag_webhook_admin` (D76).
+O endereço do webhook **não** fica no banco: fica na convar privada `vel_uniformbag_webhook_<org>` / `vel_uniformbag_webhook_admin` (D76).
 
 ### 2.9 `sub_points` — pontos de gestão
 | Campo | Tipo | Obrig. |
@@ -250,5 +250,5 @@ Recuperação após falha: operações só gravam em transação; reinício do r
 - **Backup:** antes de aplicar na VPS, dump do banco `street` (somente leitura do banco atual).
 - **Reversão:** parar o recurso; as tabelas `sub_*` podem permanecer sem efeito. Remover tabelas só com autorização explícita (destrutivo).
 - **Riscos de perda:** nenhum sobre dados existentes, pois nada existente é alterado.
-- **Versionamento (D169):** o repositório `street_uniformbag` contém só os arquivos de migração (estrutura); nunca dumps, dados de jogadores, senhas do banco ou backups do `items.lua`.
-- **Fora das tabelas (autorizado na C2, D117–D123):** entrada do item `uniform_bag` em `ox_inventory/data/items.lua` e imagens PNG em `ox_inventory/web/images`. Procedimento: (1) conferir que `uniform_bag` não existe; (2) backup verificável (hash) do `items.lua`; (3) acrescentar só o bloco do item; (4) validar a sintaxe (o ox_inventory sobe sem erro e o item aparece); (5) testar. **Reversão:** restaurar o `items.lua` do backup e remover as imagens adicionadas. Imagens: só as quatro aprovadas (D170, D175), copiadas apenas na base local após a autorização geral; os originais (PNG, `.blend` e script) ficam em `street_uniformbag/art/` no repositório (D178).
+- **Versionamento (D169):** o repositório `vel_uniformbag` contém só os arquivos de migração (estrutura); nunca dumps, dados de jogadores, senhas do banco ou backups do `items.lua`.
+- **Fora das tabelas (autorizado na C2, D117–D123):** entrada do item `uniform_bag` em `ox_inventory/data/items.lua` e imagens PNG em `ox_inventory/web/images`. Procedimento: (1) conferir que `uniform_bag` não existe; (2) backup verificável (hash) do `items.lua`; (3) acrescentar só o bloco do item; (4) validar a sintaxe (o ox_inventory sobe sem erro e o item aparece); (5) testar. **Reversão:** restaurar o `items.lua` do backup e remover as imagens adicionadas. Imagens: só as quatro aprovadas (D170, D175), copiadas apenas na base local após a autorização geral; os originais (PNG, `.blend` e script) ficam em `vel_uniformbag/art/` no repositório (D178).

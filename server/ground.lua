@@ -32,7 +32,7 @@ function Ground.IsNear(src, bagId, maxDistance)
     return #(GetEntityCoords(ped) - vector3(spot.x, spot.y, spot.z)) <= (maxDistance or Config.MaxDistance)
 end
 
-lib.callback.register('street_uniformbag:groundList', function()
+lib.callback.register('vel_uniformbag:groundList', function()
     return bags
 end)
 
@@ -85,12 +85,12 @@ function Ground.PlaceFromSlot(src, slot)
     MySQL.update.await("UPDATE `sub_bags` SET `status` = 'em_circulacao' WHERE `bag_id` = ?", { bag.bag_id })
     Utils.Audit('troca', 'bolsa_no_chao', { src = src, org = bag.org, bagId = bag.bag_id, coords = spot })
 
-    TriggerClientEvent('street_uniformbag:client:groundAdd', -1, bag.bag_id, spot)
+    TriggerClientEvent('vel_uniformbag:client:groundAdd', -1, bag.bag_id, spot)
     Change.OpenFromGround(src, bag.bag_id, true)
 end
 
 --- Recolher: qualquer jogador perto; a bolsa vai para o inventário de quem recolheu (D208).
-lib.callback.register('street_uniformbag:collect', function(src, bagId)
+lib.callback.register('vel_uniformbag:collect', function(src, bagId)
     if type(bagId) ~= 'string' or not bags[bagId] then return false end
     if not Ground.IsNear(src, bagId, Config.MaxDistance) then notify(src, 'block.too_far') return false end
     if Change.BlockedReason(src) then notify(src, 'block.dead') return false end
@@ -126,12 +126,12 @@ lib.callback.register('street_uniformbag:collect', function(src, bagId)
     Bags.TouchActivity(bagId, 'retirada', 'player', data and data.citizenid)
     Utils.Audit('retirada', 'recolhida_do_chao', { src = src, org = bag.org, bagId = bagId, coords = spot })
 
-    TriggerClientEvent('street_uniformbag:client:groundRemove', -1, bagId)
+    TriggerClientEvent('vel_uniformbag:client:groundRemove', -1, bagId)
     return true
 end)
 
 --- Abrir a bolsa que está no chão (qualquer jogador perto — D4).
-lib.callback.register('street_uniformbag:openGround', function(src, bagId)
+lib.callback.register('vel_uniformbag:openGround', function(src, bagId)
     if type(bagId) ~= 'string' or not bags[bagId] then return false end
     if not Ground.IsNear(src, bagId, Config.MaxDistance) then notify(src, 'block.too_far') return false end
     Change.OpenFromGround(src, bagId, false)

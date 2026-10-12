@@ -1,6 +1,6 @@
 # Registro de decisões — Sistema de Bolsas de Uniformes
 
-Nome técnico: `street_uniformbag` (D14, D167).
+Nome técnico: `vel_uniformbag` (D210; antes `street_uniformbag`, D14, D167).
 Este registro alimenta os seis documentos (01-PRD a 06-PLANO). **Entrevista e conferência encerradas em 2026-10-12** (D1–D198); D199–D200 são ajustes técnicos registrados na etapa 1. Nenhuma decisão de produto pendente.
 Nenhuma alteração na VPS, no banco ou na base local foi feita no planejamento.
 Regra de edição: decisões aprovadas não são reescritas; esclarecimentos e correções técnicas entram como **novas** decisões e o item original recebe um aviso "→ ver Dxxx".
@@ -24,7 +24,7 @@ Regra de edição: decisões aprovadas não são reescritas; esclarecimentos e c
 | D12 | 2026-10-11 | O alerta ocorre **a cada vez** que o uniforme é vestido indevidamente, com a localização daquele uso, evitando apenas eventos duplicados da mesma ação. | Resposta 3 |
 | D13 | 2026-10-11 | O **destinatário dos alertas é configurável por organização** (Polícia, Hospital, Mecânica e futuras). Nada é enviado automaticamente à central policial sem essa configuração. | Resposta 3 |
 
-| D14 | 2026-10-11 | **Cadastro próprio de uniformes (Opção A)** dentro do `street_uniformbag`, independente das tabelas internas do mri_Qbossmenu. Nome técnico `street_uniformbag` adotado. | Resposta 4 |
+| D14 | 2026-10-11 | **Cadastro próprio de uniformes (Opção A)** dentro do `street_uniformbag`, independente das tabelas internas do mri_Qbossmenu. Nome técnico `street_uniformbag` adotado. → ver D210. | Resposta 4 |
 | D15 | 2026-10-11 | Reaproveitar componentes de interface, menus, notificações e permissões da base quando compatíveis, sem duplicar funcionalidades. | Resposta 4 |
 | D16 | 2026-10-11 | **Permissões de gestão:** administradores autorizados gerenciam todas as organizações; líderes gerenciam só os uniformes da própria organização, respeitando as permissões reais do QBox e, se houver integração pública adequada, do bossmenu. | Resposta 4 |
 | D17 | 2026-10-11 | **Cadastro:** o responsável veste o uniforme e salva a aparência atual como modelo oficial, escolhendo organização, nome, cargo(s)/graduação(ões) autorizadas, gênero/modelo e demais configurações. | Resposta 4 |
@@ -125,7 +125,7 @@ Regra de edição: decisões aprovadas não são reescritas; esclarecimentos e c
 | D104 | 2026-10-11 | Desconexão/morte durante a troca: a bolsa real segue as regras normais de inventário, morte e drop da base; nunca é criada ou destruída artificialmente. | Resposta 12 |
 | D105 | 2026-10-11 | Nada de código proprietário/protegido do qs-outfitbag; só modelos disponíveis e mecanismos próprios ou públicos. | Resposta 12 |
 
-| D106 | 2026-10-11 | **Identidade visual da MRI (Opção A)**, cor principal de referência **`#6400E6`** (cor da VPS), considerada a cor oficial de referência do Street Roleplay para este projeto. | Resposta 13 |
+| D106 | 2026-10-11 | **Identidade visual da MRI (Opção A)**, cor principal de referência **`#6400E6`** (cor da VPS), considerada a cor oficial de referência do Street Roleplay para este projeto. → ver D210. | Resposta 13 |
 | D107 | 2026-10-11 | Estilo de referência: mri_Qadmin e mri_Qbossmenu — fundo escuro, organização clara, destaques em roxo. | Resposta 13 |
 | D108 | 2026-10-11 | Ler a cor da convar `mri:color` quando viável; padrão `#6400E6` se ausente. **Não** fixar `#9400E6` (valor da base local). | Resposta 13 |
 | D109 | 2026-10-11 | Usar o logotipo já configurado no servidor quando acessível e adequado (na VPS: convar `mri:logo`). | Resposta 13 |
@@ -193,7 +193,7 @@ Regra de edição: decisões aprovadas não são reescritas; esclarecimentos e c
 | D164 | 2026-10-12 | Atividade confirmada = só o que o sistema detecta com segurança: movimentações pelo hook `swapItems` do ox_inventory (inclui dar — `giveItem` dispara o hook, verificado —, dropar, pegar, baú), retirada do baú, uso da bolsa, emissão. **Entrar no servidor não conta.** Ausência de atividade **não** é prova de perda. Limitações no TRD §8. | Conferência C8 |
 | D165 | 2026-10-12 | Estados alterados só no servidor; classificação por rotina periódica leve (uma consulta indexada, sem varredura contínua); rastreabilidade mantida em falhas/reinícios. | Conferência C8 |
 | D166 | 2026-10-12 | Painel: filtros por Em circulação, Desconhecidas/Inativas, organização, ID individual e última atividade confirmada; bolsas desconhecidas seguem consultáveis. | Conferência C8 |
-| D167 | 2026-10-12 | **C9 — Opção A.** Repositório GitHub **privado** `street_uniformbag` (conta `welingtonivoivo-ctrl`), mesmo nome da pasta `resources/[meus_scripts]/street_uniformbag`; mesmo nome em todas as referências internas, configurações, documentação e integrações. Proibido `street-uniformbag` e renomear a pasta. | Conferência C9 |
+| D167 | 2026-10-12 | **C9 — Opção A.** Repositório GitHub **privado** `street_uniformbag` (conta `welingtonivoivo-ctrl`), mesmo nome da pasta `resources/[meus_scripts]/street_uniformbag`; mesmo nome em todas as referências internas, configurações, documentação e integrações. Proibido `street-uniformbag` e renomear a pasta. → ver D210. | Conferência C9 |
 | D168 | 2026-10-12 | Criação do repositório **só na etapa 1**, após aprovação geral do planejamento **e** autorização da primeira publicação; antes, verificar se `street_uniformbag` já existe na conta (evitar duplicidade). | Conferência C9 |
 | D169 | 2026-10-12 | Nada sensível no GitHub (credenciais, tokens, webhooks, senhas, dumps, dados de jogadores, config privada da VPS); `.gitignore` exclui temporários, backups, logs e arquivos sensíveis; conferência do conteúdo preparado antes de cada envio. Nenhuma alteração na VPS nessa etapa. | Conferência C9 |
 | D170 | 2026-10-12 | **C10 — Opção A.** Imagens próprias criadas para o projeto: padrão roxa `#6400E6` (identidade Street) + Polícia (azul-escuro, escudo), Hospital (vermelho, símbolo médico), Mecânica (laranja, chave/ferramenta). Nada copiado do qs-outfitbag ou de recursos comerciais. | Conferência C10 |
@@ -242,6 +242,7 @@ Regra de edição: decisões aprovadas não são reescritas; esclarecimentos e c
 | D208 | 2026-10-12 | **Bolsa de verdade no chão (opção A do dono; substitui D102/D103 e ajusta D99/D155/D203):** usar o item tira a bolsa do inventário e a coloca **no chão**, gravada no banco (`sub_ground_bags`) com posição; **qualquer jogador** perto pode **abrir** (D4) ou **recolher** (vai para o inventário de quem recolheu — inclusive outra pessoa, como no RP). Depois da troca o painel fecha e o personagem fica em pé; a bolsa só sai do chão quando alguém recolhe. Persistente: **não some com o tempo nem com reinício** (o objeto é recriado). **Motivo técnico de não usar o drop do ox_inventory:** drops sem uso são apagados após `inventory:cleartime` (5 min nesta base) e não sobrevivem a reinício — a bolsa esquecida sumiria com as roupas. Soltar a bolsa pelo inventário continua usando o drop normal do ox_inventory. Afastar-se mais de 3 m fecha só o painel (a bolsa fica). | Teste da etapa 3 |
 
 | D209 | 2026-10-12 | **Caminhar até a bolsa (pedido do dono):** ao escolher "Abrir bolsa" ou "Recolher bolsa" a distância, o personagem caminha até ficar de frente para a bolsa (`Config.Approach`) e só então anima; qualquer comando de movimento do jogador ou caminho travado cancela sem alterar nada. Teste do dono confirmou: roupas guardadas e aplicadas corretamente, nada perdido, bolsa volta ao inventário ao recolher e permanece no chão quando deixada. | Etapa 3 |
+| D210 | 2026-10-12 | **Recurso distribuível, sem marca da cidade (pedido do dono):** o nome técnico passa de `street_uniformbag` para **`vel_uniformbag`** (pasta, eventos, permissão `vel_uniformbag.manage`/`.admin`, convars `vel_uniformbag_webhook_<org>`/`_admin`, export `vel_uniformbag.useBag`, repositório GitHub). "Street Roleplay" sai do autor, README, tutorial e documentos; `#6400E6` vira só a cor padrão quando o servidor não define `mri:color`. Item `uniform_bag`, tabelas `sub_*` e dados não mudam. | Dono, 2026-10-12 |
 
 ### Interpretações (todas confirmadas)
 - **I1 — CONFIRMADA em 2026-10-12 (D180–D186, esclarecida em D192–D194).** Troca segura no mesmo compartimento, numa única operação, depois de confirmada a aplicação. Nada é apagado.

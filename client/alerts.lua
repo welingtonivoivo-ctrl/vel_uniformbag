@@ -3,7 +3,7 @@
 
 local blips = {}
 
-RegisterNetEvent('street_uniformbag:client:alert', function(alert)
+RegisterNetEvent('vel_uniformbag:client:alert', function(alert)
     if type(alert) ~= 'table' or type(alert.coords) ~= 'table' then return end
     local c = alert.coords
 
