@@ -129,3 +129,13 @@
 .pn-variant-card.female b { color: var(--variant-color); }
 .pn-variant-card.female .btn-primary { background: var(--variant-color); border-color: var(--variant-color); }
 .pn-variant-card.female .badge:not(.badge-warn) { background: rgba(224, 69, 143, .18); color: var(--variant-color); }
+
+/* Lista de uniformes: etiquetas e faixa lateral com a cor de cada versão (D218). */
+.pn-version-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; }
+.pn-vtag { padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.pn-vtag.male.on { background: rgba(100, 0, 230, .22); color: #b48cff; }
+.pn-vtag.female.on { background: rgba(224, 69, 143, .2); color: #e0458f; }
+.pn-vtag.off { background: transparent; color: var(--color-muted, #777); border: 1px dashed currentColor; opacity: .7; }
+.pn-item.has-male { box-shadow: inset 4px 0 0 var(--color-primary); }
+.pn-item.has-female { box-shadow: inset 4px 0 0 #e0458f; }
+.pn-item.has-male.has-female { box-shadow: inset 4px 0 0 var(--color-primary), inset 8px 0 0 #e0458f; }

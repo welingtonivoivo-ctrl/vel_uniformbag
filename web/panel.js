@@ -355,13 +355,15 @@
             el('button', { class: 'btn btn-primary', text: t.new_uniform, onclick: () => { P.edit = formFrom(null); renderUniforms(); } }),
             P.uniforms.length === 0 ? el('div', { class: 'pn-empty', text: t.empty_uniforms }) : null,
             P.uniforms.map((u) => el('div', {
-                class: `pn-item ${P.edit && P.edit.id === u.id ? 'selected' : ''}`,
+                class: `pn-item ${P.edit && P.edit.id === u.id ? 'selected' : ''} ${MODELS.filter(([m]) => u.models.includes(m)).map(([, k]) => 'has-' + k).join(' ')}`,
                 onclick: () => { P.edit = formFrom(u); renderUniforms(); },
             },
             el('div', { class: 'pn-item-title' }, u.name, ' ',
                 el('span', { class: `badge ${u.active ? '' : 'badge-muted'}`, text: u.active ? t.active : t.inactive })),
             el('div', { class: 'pn-item-sub', text: `${t.authorized_for}: ${summary(u)}` }),
-            el('div', { class: 'pn-item-sub', text: `${t.versions}: ${MODELS.map(([m, k]) => `${t[k]} ${u.models.includes(m) ? '✓' : '—'}`).join(' · ')} · ${t.bags_count}: ${u.bags}` }))));
+            el('div', { class: 'pn-item-sub pn-version-tags' }, MODELS.map(([m, k]) =>
+                el('span', { class: `pn-vtag ${k} ${u.models.includes(m) ? 'on' : 'off'}`, text: `${t[k]} ${u.models.includes(m) ? '✓' : '—'}` })),
+                el('span', { text: `${t.bags_count}: ${u.bags}` })))));
 
         const main = el('div', { class: 'pn-col pn-main' }, error ? el('div', { class: 'pn-msg err', text: error }) : null,
             P.edit ? editor() : el('div', { class: 'pn-empty', text: t.guide }));
