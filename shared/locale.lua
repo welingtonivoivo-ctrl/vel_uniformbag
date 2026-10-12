@@ -27,8 +27,8 @@ Locale = {
     ['hook.failed']          = 'Falha ao registrar o hook %s do ox_inventory: %s',
     ['startup.known_bags']   = 'Bolsas emitidas carregadas: %s.',
 
-    ['item.label']           = 'Bolsa de Uniforme — %s',
-    ['item.description']     = 'Organização: %s · ID %s',
+    ['item.label']           = '%s',
+    ['item.description']     = 'Bolsa de uniforme · %s · ID %s',
     ['item.invalid_label']   = 'Bolsa não reconhecida',
     ['item.invalid_desc']    = 'Esta bolsa não foi emitida pelo sistema e não tem efeito.',
 
@@ -217,6 +217,7 @@ Locale = {
     ['perm.plugin_registered'] = 'Aba "Bolsas de Uniformes" registrada em Plugins do mri_Qadmin.',
     ['discord.failed']       = 'Envio ao Discord do registro #%s falhou (status %s); o registro continua salvo no banco.',
     ['startup.points']       = 'Pontos de gestão carregados: %s.',
+    ['startup.relabel']      = 'Nomes das bolsas nos baús atualizados: %s.',
 
     ['alert.notify']         = 'Farda: %s · Rua: %s',
 

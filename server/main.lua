@@ -94,6 +94,8 @@ CreateThread(function()
         log(L('startup.known_bags', Bags.LoadKnown()))
         log(L('startup.ground', Ground.Load()))
         log(L('startup.points', Points.Load()))
+        local okRelabel, fixed = pcall(Bags.ResyncStashes)
+        log(L('startup.relabel', okRelabel and fixed or 0))
         Bags.RegisterHooks()
     end
     Permissions.RegisterWithQadmin()

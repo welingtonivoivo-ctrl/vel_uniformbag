@@ -124,6 +124,28 @@ function Bags.LoadKnown()
     return #rows
 end
 
+--- Acerta nome, descrição e imagem das bolsas guardadas nos baús quando o texto do item muda (D212).
+function Bags.ResyncStashes()
+    local rows = MySQL.query.await([[SELECT DISTINCT `location_id` FROM `sub_bags`
+        WHERE `location_type` = 'stash' AND `status` = 'em_estoque']]) or {}
+    local fixed = 0
+    for _, r in ipairs(rows) do
+        local items = r.location_id and exports.ox_inventory:GetInventoryItems(r.location_id, false)
+        for slot, item in pairs(items or {}) do
+            local meta = item.name == ITEM and item.metadata or nil
+            local bag = meta and meta.bagId and not meta.invalid and Bags.Get(meta.bagId)
+            if bag then
+                local wanted = Bags.BuildMetadata(bag, Uniforms.Get(bag.uniform_id))
+                if meta.label ~= wanted.label or meta.description ~= wanted.description or meta.image ~= wanted.image then
+                    exports.ox_inventory:SetMetadata(r.location_id, slot, wanted)
+                    fixed = fixed + 1
+                end
+            end
+        end
+    end
+    return fixed
+end
+
 --- Hook createItem (D191): o ox_inventory não deixa bloquear; marcamos como inválida toda
 --- bolsa cujo bagId não foi emitido por nós. Um "dar item" do próprio ox_inventory recria o
 --- item no destino com o mesmo bagId e passa normalmente.

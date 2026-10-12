@@ -5,6 +5,7 @@
 ### Alterado
 - Recurso renomeado de `street_uniformbag` para **`vel_uniformbag`**: pasta, eventos, permissões ACE (`vel_uniformbag.manage` / `vel_uniformbag.admin`), convars de webhook (`vel_uniformbag_webhook_<org>` / `vel_uniformbag_webhook_admin`) e export do item (`vel_uniformbag.useBag`).
 - Botão "Abrir loja de roupas" do painel abre o menu normal das lojas do mri_Qappearance, com o preço das lojas (D211).
+- Nome da bolsa no inventário é só o nome do uniforme; bolsas em estoque são renomeadas ao iniciar (D212).
 - Removida a marca da cidade (autor, descrição, README, tutorial e documentos). `#6400E6` passa a ser só a cor padrão quando o servidor não define `mri:color`.
 
 ### Atenção ao atualizar
