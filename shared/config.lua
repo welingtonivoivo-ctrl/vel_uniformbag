@@ -44,5 +44,57 @@ Config.DefaultItemImage = 'uniform_bag'
 -- Cor de identidade quando a convar mri:color não estiver definida (D108)
 Config.DefaultColor = '#6400E6'
 
+-- Peças de roupa guardadas e aplicadas (IDs de componente do GTA).
+-- 0 (rosto) e 2 (cabelo) nunca entram: uma roupa guardada não troca o rosto de quem veste.
+Config.ClothingComponents = { 1, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
+Config.ClothingProps = { 0, 1, 2, 6, 7 }
+
+-- Peças usadas para reconhecer uma farda vestida (D140, D193, D196).
+-- Máscara, mochila, colete e emblemas variam no RP e não entram na comparação.
+Config.UniformMatchComponents = { 3, 4, 6, 8, 11 }
+Config.UniformMatchProps = {}
+
+-- Tamanho máximo aceito para uma aparência enviada pelo cliente, em caracteres JSON
+Config.MaxAppearanceSize = 20000
+
+-- Intervalo em que o cliente renova a trava enquanto a bolsa está aberta, em segundos
+Config.LockRenewSeconds = 20
+
+-- Animações nativas do GTA (D1, D97)
+-- place: soltar a bolsa · idle: mexendo na bolsa enquanto a tela está aberta (D203)
+-- change: vestindo a roupa · collect: abaixar e pegar a bolsa de volta (D203)
+Config.Animations = {
+    place   = { dict = 'random@domestic', clip = 'pickup_low', duration = 1200 },
+    idle    = { dict = 'anim@heists@money_grab@duffel', clip = 'loop' },
+    change  = { dict = 'clothingshirt', clip = 'try_shirt_positive_d', duration = 2500 },
+    collect = { dict = 'random@domestic', clip = 'pickup_low', duration = 1200 },
+}
+
+-- Caminhar até a bolsa no chão antes de abrir/recolher (D209)
+Config.Approach = {
+    stopDistance = 0.7, -- para a esta distância da bolsa, de frente para ela
+    timeoutMs = 6000,   -- desiste se não chegar neste tempo
+}
+
+-- Prévia da roupa ao passar o mouse (D204): cópia local do personagem, só na tela de quem usa.
+-- A cópia aparece na frente da câmera, no lado esquerdo da tela (o painel fica à direita),
+-- virada para a câmera, sem encostar no personagem.
+Config.Preview = {
+    depth = 2.6,   -- metros à frente da câmera
+    side = -1.3,   -- metros para o lado (negativo = esquerda da tela)
+}
+
+-- Alerta pelo ps-dispatch (D124). O tempo do ponto vem de alert_blip_seconds da organização.
+Config.Dispatch = {
+    code = '10-31',
+    codeName = 'uniformbag',
+    icon = 'fas fa-user-secret',
+    priority = 1,
+    sprite = 366,
+    color = 1,
+    scale = 1.0,
+    radius = 0,
+}
+
 -- Mensagens de diagnóstico extras no console
 Config.Debug = false

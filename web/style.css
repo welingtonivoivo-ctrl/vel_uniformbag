@@ -1,12 +1,18 @@
-/* Identidade (04-DESIGN §2). Sem backdrop-filter (04-DESIGN §7). */
+/* Identidade e componentes (04-DESIGN). Sem backdrop-filter (04-DESIGN §7: transparência em placas AMD). */
 :root {
     --color-primary: #6400E6;
+    --color-primary-soft: #2A1A4A;
+    --color-accent: #B794FF;
     --color-bg: #0F0F14;
     --color-surface: #17171F;
     --color-border: #2A2A35;
     --color-text: #F2F2F7;
     --color-text-muted: #9A9AAE;
+    --color-warning: #EAB308;
+    --color-danger: #EF4444;
 }
+
+* { box-sizing: border-box; }
 
 html,
 body {
@@ -16,8 +22,135 @@ body {
     font-family: 'Inter', 'Segoe UI', sans-serif;
     color: var(--color-text);
     overflow: hidden;
+    user-select: none;
 }
 
-.hidden {
-    display: none !important;
+.hidden { display: none !important; }
+
+.panel {
+    position: fixed;
+    top: 10vh;
+    right: 24px;
+    width: 420px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow-y: auto;
 }
+
+.eyebrow,
+.label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+
+h1 { margin: 4px 0; font-size: 20px; font-weight: 700; }
+h2 { margin: 0 0 16px; font-size: 15px; font-weight: 600; }
+.meta, .muted, .hint { font-size: 13px; color: var(--color-text-muted); }
+.mono { font-family: Consolas, monospace; }
+
+.card {
+    padding: 16px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+}
+
+.card-official { border-color: var(--color-primary); }
+.official-name { margin: 6px 0 4px; font-size: 15px; font-weight: 600; }
+.hint { margin: 0 0 12px; min-height: 0; }
+
+.slots { display: flex; flex-direction: column; gap: 8px; }
+
+.slot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+}
+
+.slot-title { font-size: 14px; font-weight: 600; }
+.slot-sub { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+
+.badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--color-primary-soft);
+    color: var(--color-accent);
+}
+.badge-warn { background: rgba(234, 179, 8, 0.15); color: var(--color-warning); }
+.badge-muted { background: var(--color-border); color: var(--color-text-muted); }
+
+.btn {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.btn-primary { background: var(--color-primary); border: 1px solid var(--color-primary); color: #fff; }
+.btn-secondary { background: transparent; border: 1px solid var(--color-primary); color: var(--color-text); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.panel-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.footer-actions { display: flex; gap: 8px; }
+
+.busy {
+    position: fixed;
+    top: 10vh;
+    right: 24px;
+    width: 420px;
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+    background: var(--color-primary);
+    border-radius: 10px 10px 0 0;
+}
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.modal {
+    width: 560px;
+    padding: 24px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+}
+
+.confirm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.confirm-box {
+    padding: 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.confirm-box .label { margin-bottom: 6px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }

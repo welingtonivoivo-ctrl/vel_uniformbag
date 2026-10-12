@@ -14,6 +14,9 @@ Dois conceitos que não se confundem (D192, D195):
 | Comando **`/minharoupa`** | O próprio personagem | Ter recuperação "Aguardando aplicação" em seu nome (D159) |
 | Aba **"Bolsas de Uniformes"** em Plugins do mri_Qadmin | Staff | Permissão `street_uniformbag.manage` ou ACE de emergência |
 | **Ponto de gestão** na sede (olhinho) | Líder | `isboss` na organização do ponto; ponto ativo |
+| Comando **`/adminoutfit`** | Staff | Permissão "Gerenciar Bolsas de Uniformes" ou ACE de emergência (D205) |
+
+Na tela "Bolsa", a bolsa fica no chão e a tela aberta até **"Recolher bolsa"** (D203); passar o mouse sobre uma roupa mostra a prévia ao lado do personagem (D204).
 
 ## 2. Telas
 

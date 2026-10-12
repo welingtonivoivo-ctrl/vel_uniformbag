@@ -251,8 +251,26 @@ CREATE TABLE IF NOT EXISTS `sub_operations` (
     },
 }
 
+-- Versão 2 (D208): bolsas colocadas no chão pelo nosso script. Só acrescenta uma tabela.
+Schema.Migrations[2] = {
+    [[
+CREATE TABLE IF NOT EXISTS `sub_ground_bags` (
+    `bag_id`              CHAR(12) NOT NULL,
+    `x`                   DECIMAL(10,3) NOT NULL,
+    `y`                   DECIMAL(10,3) NOT NULL,
+    `z`                   DECIMAL(10,3) NOT NULL,
+    `heading`             DECIMAL(6,2) NOT NULL DEFAULT 0,
+    `placed_by_citizenid` VARCHAR(60) NOT NULL,
+    `placed_at`           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`bag_id`),
+    CONSTRAINT `fk_ground_bag` FOREIGN KEY (`bag_id`) REFERENCES `sub_bags` (`bag_id`) ON DELETE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ]],
+}
+
 -- Tabelas esperadas após a última versão (usado na conferência pós-migração).
 Schema.Tables = {
+    'sub_ground_bags',
     'sub_schema_version', 'sub_uniforms', 'sub_uniform_grades', 'sub_uniform_variants',
     'sub_issue_batches', 'sub_bags', 'sub_bag_slots', 'sub_wearing', 'sub_org_settings',
     'sub_points', 'sub_audit', 'sub_incidents', 'sub_recoveries', 'sub_operations',

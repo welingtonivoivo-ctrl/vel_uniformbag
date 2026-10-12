@@ -89,6 +89,11 @@ CreateThread(function()
     if not checkDependencies() then return end
     checkItem()
     checkColor()
-    Database.Migrate()
+    if Database.Migrate() then
+        Change.RevertInterrupted()
+        log(L('startup.known_bags', Bags.LoadKnown()))
+        log(L('startup.ground', Ground.Load()))
+        Bags.RegisterHooks()
+    end
     Permissions.RegisterWithQadmin()
 end)

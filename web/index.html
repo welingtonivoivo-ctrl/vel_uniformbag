@@ -6,8 +6,60 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Esqueleto da etapa 1: telas "Bolsa" e "Painel" entram nas etapas 3 e 4. -->
-    <div id="app" class="hidden"></div>
+    <!-- Tela "Bolsa" (03-FLUXO §2.1, 04-DESIGN). O Painel de gestão entra na etapa 4. -->
+    <div id="app" class="hidden">
+        <aside class="panel">
+            <header class="panel-header">
+                <div class="eyebrow" id="t-title"></div>
+                <h1 id="uniform-name"></h1>
+                <div class="meta"><span id="org-label"></span> · <span id="bag-id" class="mono"></span></div>
+            </header>
+
+            <section class="card card-official">
+                <div class="label" id="t-official"></div>
+                <div class="official-name" id="official-name"></div>
+                <p class="hint" id="official-hint"></p>
+                <button class="btn btn-primary" id="btn-uniform"></button>
+            </section>
+
+            <section class="slots">
+                <div class="label" id="t-slots"></div>
+                <div id="slot-list"></div>
+            </section>
+
+            <p class="hint" id="preview-hint"></p>
+
+            <footer class="panel-footer">
+                <span id="slot-counter" class="muted"></span>
+                <div class="footer-actions">
+                    <button class="btn btn-secondary" id="btn-close"></button>
+                    <button class="btn btn-primary" id="btn-collect"></button>
+                </div>
+            </footer>
+
+            <div class="busy hidden" id="busy"><span id="t-working"></span></div>
+        </aside>
+
+        <div class="modal-backdrop hidden" id="confirm">
+            <div class="modal">
+                <h2 id="t-confirm-title"></h2>
+                <div class="confirm-grid">
+                    <div class="confirm-box">
+                        <div class="label" id="t-will-wear"></div>
+                        <div id="confirm-wear"></div>
+                    </div>
+                    <div class="confirm-box">
+                        <div class="label" id="t-will-store"></div>
+                        <div id="confirm-store"></div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="btn-back"></button>
+                    <button class="btn btn-primary" id="btn-confirm"></button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="app.js"></script>
 </body>
 </html>

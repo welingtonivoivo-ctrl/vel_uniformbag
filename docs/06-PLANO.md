@@ -52,6 +52,7 @@ Versionamento: repositório privado `welingtonivoivo-ctrl/street_uniformbag`, pr
 ## Etapa 4 — Funcionalidades complementares
 - **Objetivo:** painel completo, pontos, reavaliação, rastreio, Discord, recuperação.
 - **Arquivos:** `server/panel.lua`, `server/points.lua`, `server/reevaluate.lua`, `server/tracking.lua`, `server/discord.lua`, `server/recovery.lua`, `client/points.lua`, `web/panel.*`.
+- **Portas do Painel:** aba de plugin no mri_Qadmin (staff), pontos nas sedes (líderes) e comando **`/adminoutfit`** (só staff, D205); botão **"Abrir loja de roupas"** gratuito, só roupas (D206). Os comandos provisórios da etapa 3 (`/ubag_*`) saem quando o painel estiver pronto.
 - **Criado:** abas Uniformes (versões M/F), Emissão, Estoque (inclui filtro "Duplicadas" e "Liberar bolsa"), Alertas e logs, Pontos, Auditoria, Recuperação; registro do plugin no mri_Qadmin; pontos das sedes (coordenadas apresentadas para aprovação, D92); reavaliação por eventos do QBox; hook `swapItems`; adaptador `jobnotify`; fila de envio ao Discord com reenvio; rotina de inatividade.
 - **Resultado:** sistema completo conforme o PRD.
 - **Aceitação:** critérios 5, 9, 11 e 12 do PRD passam; mesma interface nas duas portas.
