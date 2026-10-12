@@ -9,7 +9,7 @@ local ALLOWED = {
     stashes = true, issue = true, bags = true, bagHistory = true,
     alertSettings = true, saveAlertSettings = true, audit = true,
     findCharacter = true, recoverySources = true, createRecovery = true, cancelRecovery = true,
-    points = true, addPoint = true, togglePoint = true,
+    points = true, addPoint = true, togglePoint = true, stashRules = true, setStashRule = true, clearStash = true,
 }
 
 local function panelLocale()
@@ -29,7 +29,7 @@ local function panelLocale()
         'tab_points', 'points_hint', 'point_label', 'point_placeholder', 'point_add', 'points_staff_only',
         'activate', 'deactivate', 'discord', 'webhook_on', 'webhook_off', 'webhook_org', 'webhook_admin', 'discord_hint',
         'capture_male', 'capture_female', 'you_are', 'need_male', 'need_female', 'delete_uniform', 'delete_hint',
-        'confirm_delete', 'deleted',
+        'confirm_delete', 'deleted', 'tab_stashes', 'stash_rules_hint', 'who_opens', 'rule_all', 'rule_male', 'rule_female', 'clear_stash', 'clear_hint', 'confirm_clear', 'cleared',
     }
     local t = {}
     for _, k in ipairs(keys) do t[k] = L('panel.' .. k) end

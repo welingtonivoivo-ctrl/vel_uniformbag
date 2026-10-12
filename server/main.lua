@@ -98,6 +98,12 @@ CreateThread(function()
         local okRelabel, fixed = pcall(Bags.ResyncStashes)
         log(L('startup.relabel', okRelabel and fixed or 0))
         Bags.RegisterHooks()
+        StashRules.RegisterHook()
+        -- Os baús do mri_Qbossmenu podem ainda não existir no início: segunda passada depois.
+        SetTimeout(60000, function()
+            local ok, n = pcall(Bags.ResyncStashes)
+            if ok and n > 0 then log(L('startup.relabel', n)) end
+        end)
     end
     Permissions.RegisterWithQadmin()
 end)

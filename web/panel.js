@@ -69,7 +69,7 @@
                         el('button', { class: 'btn btn-secondary', text: t.open_store, title: t.store_hint, onclick: () => nui('openStore') }),
                         el('button', { class: 'btn btn-secondary', text: t.close, onclick: close })),
                     el('div', { class: 'pn-tabs' },
-                        [['uniforms', t.tab_uniforms], ['issue', t.tab_issue], ['bags', t.tab_bags], ['alerts', t.tab_alerts], ['points', t.tab_points], ['audit', t.tab_audit],
+                        [['uniforms', t.tab_uniforms], ['issue', t.tab_issue], ['bags', t.tab_bags], ['alerts', t.tab_alerts], ['points', t.tab_points], ['stashrules', t.tab_stashes], ['audit', t.tab_audit],
                             P.data.admin ? ['recovery', t.tab_recovery] : null].filter(Boolean).map(([id, label]) =>
                             el('button', { class: `pn-tab ${P.tab === id ? 'active' : ''}`, text: label, onclick: () => { P.tab = id; shell(); load(); } }))),
                     el('div', { class: 'pn-body', id: 'pn-body' }))));
@@ -97,6 +97,7 @@
         if (P.tab === 'audit') return loadAudit();
         if (P.tab === 'recovery') return loadRecovery();
         if (P.tab === 'points') return loadPoints();
+        if (P.tab === 'stashrules') return loadStashRules();
         return loadBags();
     }
 
@@ -132,6 +133,41 @@
                             if (r.error) return setMsg('pn-point-msg', r.message, false);
                             loadPoints();
                         } }) : null)))))));
+    }
+
+    // ------------------------------------------------------------------ Baús só masculino / só feminino (D215)
+
+    async function loadStashRules() {
+        const t = P.t;
+        const res = await call('stashRules', P.org);
+        if (!P) return;
+        if (res.error) return document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-msg err', text: res.message }));
+        const options = [['', t.rule_all], ['mp_m_freemode_01', t.rule_male], ['mp_f_freemode_01', t.rule_female]];
+
+        document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-main' },
+            el('div', { class: 'pn-item-sub', text: t.stash_rules_hint }),
+            el('div', { class: 'pn-msg', id: 'pn-stash-msg' }),
+            (res.stashes || []).length === 0 ? el('div', { class: 'pn-empty', text: t.no_stash }) :
+                el('table', { class: 'pn-table' },
+                    el('thead', {}, el('tr', {}, [t.stash, t.who_opens, ''].map((h) => el('th', { text: h })))),
+                    el('tbody', {}, res.stashes.map((s) => el('tr', {},
+                        el('td', {}, s.label, el('div', { class: 'pn-item-sub mono', text: s.id })),
+                        el('td', {}, el('select', { onchange: async (e) => {
+                            const r = await call('setStashRule', P.org, s.id, e.target.value);
+                            if (r.error) return setMsg('pn-stash-msg', r.message, false);
+                            setMsg('pn-stash-msg', t.saved, true);
+                        } }, options.map(([v, label]) => el('option', { value: v, text: label, selected: s.model === v || undefined })))),
+                        el('td', {}, el('button', { class: 'btn btn-danger btn-sm', text: t.clear_stash, title: t.clear_hint, onclick: async (e) => {
+                            if (e.target.dataset.armed !== '1') {
+                                e.target.dataset.armed = '1'; e.target.textContent = t.confirm_clear;
+                                setTimeout(() => { if (e.target.isConnected) { e.target.dataset.armed = ''; e.target.textContent = t.clear_stash; } }, 4000);
+                                return;
+                            }
+                            e.target.dataset.armed = ''; e.target.textContent = t.clear_stash;
+                            const r = await call('clearStash', P.org, s.id);
+                            if (r.error) return setMsg('pn-stash-msg', r.message, false);
+                            setMsg('pn-stash-msg', t.cleared.replace('%s', r.removed).replace('%s', r.kept), true);
+                        } }))))))));
     }
 
     // ------------------------------------------------------------------ Alertas e logs

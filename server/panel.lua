@@ -244,8 +244,8 @@ end)
 ------------------------------------------------------------------------------------------------
 
 --- Baús da organização registrados no mri_Qbossmenu (D26); a configuração manual vem na parte 2.
-lib.callback.register('vel_uniformbag:panel:stashes', function(src, org)
-    if not guard(src, org) then return {} end
+--- Baús da organização cadastrados no mri_Qbossmenu.
+local function orgStashes(org)
     local list = {}
     if GetResourceState('mri_Qbossmenu') == 'started' then
         local ok, def = pcall(function() return exports.mri_Qbossmenu:GetManagedDefinition(org, 'job') end)
@@ -259,6 +259,64 @@ lib.callback.register('vel_uniformbag:panel:stashes', function(src, org)
         end
     end
     return list
+end
+
+lib.callback.register('vel_uniformbag:panel:stashes', function(src, org)
+    if not guard(src, org) then return {} end
+    return orgStashes(org)
+end)
+
+--- Regras de modelo por baú (D215).
+lib.callback.register('vel_uniformbag:panel:stashRules', function(src, org)
+    local ok, err = guard(src, org)
+    if not ok then return { error = err } end
+    local list = orgStashes(org)
+    for _, s in ipairs(list) do s.model = StashRules.Get(s.id) or '' end
+    return { stashes = list }
+end)
+
+lib.callback.register('vel_uniformbag:panel:setStashRule', function(src, org, stashId, model)
+    local ok, err = guard(src, org)
+    if not ok then return { error = err } end
+    local found
+    for _, s in ipairs(orgStashes(org)) do if s.id == stashId then found = s end end
+    if not found then return { error = 'cmd.stash_invalid' } end
+    StashRules.Set(stashId, model)
+    Utils.Audit('admin', 'regra_bau', { src = src, org = org, data = { bau = stashId, modelo = StashRules.Get(stashId) or 'todos' } })
+    return { ok = true }
+end)
+
+--- Limpar baú: tira só as bolsas de uniforme (pilhas e unitárias). Bolsas que guardam roupas
+--- civis de alguém ficam, para ninguém perder roupa (D216).
+lib.callback.register('vel_uniformbag:panel:clearStash', function(src, org, stashId)
+    local ok, err = guard(src, org)
+    if not ok then return { error = err } end
+    local found
+    for _, s in ipairs(orgStashes(org)) do if s.id == stashId then found = s end end
+    if not found then return { error = 'cmd.stash_invalid' } end
+
+    local item = Config.ItemName
+    local removed, kept = 0, 0
+    for slot, it in pairs(exports.ox_inventory:GetInventoryItems(stashId) or {}) do
+        if it.name == item then
+            local meta = it.metadata or {}
+            local bagId = type(meta.bagId) == 'string' and meta.bagId or nil
+            local hasClothes = bagId and (tonumber(MySQL.scalar.await('SELECT COUNT(*) FROM `sub_bag_slots` WHERE `bag_id` = ?', { bagId })) or 0) > 0
+            if hasClothes then
+                kept = kept + it.count
+            elseif exports.ox_inventory:RemoveItem(stashId, item, it.count, nil, slot) then
+                removed = removed + it.count
+                if bagId then
+                    Bags.Known[bagId] = nil
+                    MySQL.update.await([[UPDATE `sub_bags` SET `status` = 'desconhecida', `location_type` = NULL, `location_id` = NULL,
+                        `last_activity_at` = NOW(), `last_activity_kind` = 'descartada' WHERE `bag_id` = ?]], { bagId })
+                end
+            end
+        end
+    end
+
+    Utils.Audit('admin', 'bau_limpo', { src = src, org = org, data = { bau = stashId, removidas = removed, mantidas = kept } })
+    return { ok = true, removed = removed, kept = kept }
 end)
 
 lib.callback.register('vel_uniformbag:panel:issue', function(src, uniformId, qty, stashId)
