@@ -1,0 +1,23 @@
+/* Identidade (04-DESIGN §2). Sem backdrop-filter (04-DESIGN §7). */
+:root {
+    --color-primary: #6400E6;
+    --color-bg: #0F0F14;
+    --color-surface: #17171F;
+    --color-border: #2A2A35;
+    --color-text: #F2F2F7;
+    --color-text-muted: #9A9AAE;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: var(--color-text);
+    overflow: hidden;
+}
+
+.hidden {
+    display: none !important;
+}

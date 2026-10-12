@@ -1,0 +1,36 @@
+# Segredos e configuração privada (D169) — nunca versionar
+.env*
+secrets*
+*.cfg
+*.key
+*.pem
+
+# Logs, temporários e backups
+*.log
+*.tmp
+*.bak
+*.orig
+backup*/
+tmp/
+
+# Dumps e exportações de banco
+*.sql
+*.sql.gz
+*.dump
+
+# Pacotes
+*.zip
+*.rar
+*.7z
+
+# Ferramentas e sistema
+node_modules/
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Blender: arquivos de recuperação automática (o .blend principal em art/ é versionado)
+*.blend1
+*.blend2
