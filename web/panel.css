@@ -139,3 +139,8 @@
 .pn-item.has-male { box-shadow: inset 4px 0 0 var(--color-primary); }
 .pn-item.has-female { box-shadow: inset 4px 0 0 #e0458f; }
 .pn-item.has-male.has-female { box-shadow: inset 4px 0 0 var(--color-primary), inset 8px 0 0 #e0458f; }
+
+/* Uniforme só feminino: o card inteiro em rosa (selecionado ou não); masculino mantém o roxo (D218). */
+.pn-item.has-female:not(.has-male) { border-color: rgba(224, 69, 143, .45); }
+.pn-item.has-female:not(.has-male).selected { background: rgba(224, 69, 143, .16); border-color: #e0458f; }
+.pn-item.has-female:not(.has-male) .badge:not(.badge-muted) { background: rgba(224, 69, 143, .2); color: #e0458f; }
