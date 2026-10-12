@@ -80,39 +80,21 @@ RegisterNUICallback('panel', function(body, cb)
     cb(result or { error = 'block.invalid_request', message = L('block.invalid_request') })
 end)
 
---- Loja de roupas gratuita, só roupas e acessórios (D206).
+--- Menu normal das lojas de roupa do mri_Qappearance, com o preço das lojas (D211).
+--- O painel fecha; depois de montar a farda, a pessoa abre o painel de novo para gravar a versão.
 RegisterNUICallback('openStore', function(_, cb)
     cb(true)
     if not lib.callback.await('vel_uniformbag:panel:canOpenStore', false) then return end
 
-    local wasEmbedded = embedded
-    if wasEmbedded then
+    if embedded then
+        embedded = false
+        panelOpen = false
         pcall(function() exports.mri_Qadmin:ClosePlugin() end)
-        Wait(300)
     else
-        SetNuiFocus(false, false)
-        SendNUIMessage({ action = 'panelHide' })
+        closePanel()
     end
-
-    local all ={ masks = true, upperBody = true, lowerBody = true, bags = true, shoes = true,
-        scarfAndChains = true, bodyArmor = true, shirts = true, decals = true, jackets = true }
-    local props = { hats = true, glasses = true, ear = true, watches = true, bracelets = true }
-
-    exports.mri_Qappearance:startPlayerCustomization(function(appearance)
-        if appearance then
-            TriggerServerEvent('illenium-appearance:server:saveAppearance', appearance)
-        end
-        if wasEmbedded then
-            pcall(function() exports.mri_Qadmin:OpenPlugin('vel_uniformbag') end)
-        elseif panelOpen then
-            SendNUIMessage({ action = 'panelShow' })
-            SetNuiFocus(true, true)
-        end
-    end, {
-        ped = false, headBlend = false, faceFeatures = false, headOverlays = false, tattoos = false,
-        components = true, componentConfig = all, props = true, propConfig = props,
-        enableExit = true, hasTracker = false, automaticFade = false,
-    })
+    Wait(300)
+    TriggerEvent('illenium-appearance:client:openClothingShopMenu', false)
 end)
 
 AddEventHandler('onResourceStop', function(resource)
