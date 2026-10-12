@@ -31,6 +31,69 @@ function Bags.OrgImage(org)
     return Bags.ResolveImage(row and row.item_image)
 end
 
+------------------------------------------------------------------------------------------------
+-- Estoque empilhável (D213): bolsas recém-emitidas ainda não têm ID e são idênticas por
+-- uniforme, então o ox_inventory empilha só as do MESMO uniforme. O ID nasce no primeiro uso.
+------------------------------------------------------------------------------------------------
+
+--- uniformId -> org dos uniformes cadastrados; o hook createItem é síncrono e não pode ler o banco.
+Bags.StockUniforms = {}
+
+function Bags.LoadStockUniforms()
+    local rows = MySQL.query.await('SELECT `id`, `org` FROM `sub_uniforms`') or {}
+    for _, r in ipairs(rows) do Bags.StockUniforms[r.id] = r.org end
+    return #rows
+end
+
+--- Metadados das bolsas em estoque: iguais para o mesmo uniforme (por isso empilham).
+function Bags.StockMetadata(uniform)
+    local jobs = exports.qbx_core:GetJobs()
+    local orgLabel = jobs and jobs[uniform.org] and jobs[uniform.org].label or uniform.org
+    return {
+        stock = true,
+        uniformId = uniform.id,
+        org = uniform.org,
+        label = L('item.label', uniform.name),
+        description = L('item.stock_description', orgLabel),
+        image = Bags.OrgImage(uniform.org),
+    }
+end
+
+local function isValidStock(meta)
+    return meta.stock == true and meta.bagId == nil and type(meta.uniformId) == 'number'
+        and Bags.StockUniforms[meta.uniformId] ~= nil and Bags.StockUniforms[meta.uniformId] == meta.org
+end
+Bags.IsValidStock = isValidStock
+
+--- ID novo e livre (memória e banco).
+function Bags.NewId()
+    for _ = 1, 10 do
+        local id = Utils.NewBagId()
+        if not Bags.Known[id] and not MySQL.scalar.await("SELECT 1 FROM `sub_bags` WHERE `bag_id` = ?", { id }) then
+            return id
+        end
+    end
+    return nil
+end
+
+--- Dá ID e registro a uma bolsa tirada de uma pilha de estoque, no momento do primeiro uso (D213).
+--- O lote é o mais recente entregue desse uniforme (a pilha não guarda de qual lote veio).
+---@return table|nil bag
+function Bags.Materialize(meta, citizenid)
+    local uniform = Uniforms.Get(meta.uniformId)
+    if not uniform or uniform.org ~= meta.org then return nil end
+    local batch = MySQL.single.await(
+        "SELECT `id`, `requested_by` FROM `sub_issue_batches` WHERE `uniform_id` = ? AND `delivered` > 0 ORDER BY `id` DESC LIMIT 1", { uniform.id })
+    local bagId = batch and Bags.NewId()
+    if not bagId then return nil end
+    MySQL.insert.await(
+        [[INSERT INTO `sub_bags` (`bag_id`, `uniform_id`, `org`, `batch_id`, `status`, `location_type`, `location_id`, `issued_by`, `last_withdrawn_by`, `last_withdrawn_at`, `last_activity_kind`)
+          VALUES (?, ?, ?, ?, 'em_circulacao', 'player', ?, ?, ?, NOW(), 'primeiro_uso')]],
+        { bagId, uniform.id, uniform.org, batch.id, citizenid, batch.requested_by, citizenid })
+    Bags.Known[bagId] = true
+    return Bags.Get(bagId)
+end
+
 --- Metadados de apresentação do item a partir do banco.
 function Bags.BuildMetadata(bag, uniform)
     local jobs = exports.qbx_core:GetJobs()
@@ -124,22 +187,32 @@ function Bags.LoadKnown()
     return #rows
 end
 
---- Acerta nome, descrição e imagem das bolsas guardadas nos baús quando o texto do item muda (D212).
+--- Acerta nome, descrição e imagem das bolsas guardadas nos baús (unitárias e pilhas de estoque)
+--- quando o texto do item muda (D212, D213).
 function Bags.ResyncStashes()
-    local rows = MySQL.query.await([[SELECT DISTINCT `location_id` FROM `sub_bags`
-        WHERE `location_type` = 'stash' AND `status` = 'em_estoque']]) or {}
-    local fixed = 0
+    local rows = MySQL.query.await([[SELECT DISTINCT `location_id` AS id FROM `sub_bags`
+        WHERE `location_type` = stash AND `status` = em_estoque
+        UNION SELECT DISTINCT `stash_id` FROM `sub_issue_batches` WHERE `delivered` > 0]]) or {}
+    local uniforms, fixed = {}, 0
+    local function uniformOf(id)
+        if uniforms[id] == nil then uniforms[id] = Uniforms.Get(id) or false end
+        return uniforms[id] or nil
+    end
     for _, r in ipairs(rows) do
-        local items = r.location_id and exports.ox_inventory:GetInventoryItems(r.location_id, false)
+        local items = r.id and exports.ox_inventory:GetInventoryItems(r.id, false)
         for slot, item in pairs(items or {}) do
             local meta = item.name == ITEM and item.metadata or nil
-            local bag = meta and meta.bagId and not meta.invalid and Bags.Get(meta.bagId)
-            if bag then
-                local wanted = Bags.BuildMetadata(bag, Uniforms.Get(bag.uniform_id))
-                if meta.label ~= wanted.label or meta.description ~= wanted.description or meta.image ~= wanted.image then
-                    exports.ox_inventory:SetMetadata(r.location_id, slot, wanted)
-                    fixed = fixed + 1
-                end
+            local wanted
+            if meta and not meta.invalid and meta.bagId then
+                local bag = Bags.Get(meta.bagId)
+                if bag then wanted = Bags.BuildMetadata(bag, uniformOf(bag.uniform_id)) end
+            elseif meta and isValidStock(meta) then
+                local uniform = uniformOf(meta.uniformId)
+                if uniform then wanted = Bags.StockMetadata(uniform) end
+            end
+            if wanted and (meta.label ~= wanted.label or meta.description ~= wanted.description or meta.image ~= wanted.image) then
+                exports.ox_inventory:SetMetadata(r.id, slot, wanted)
+                fixed = fixed + 1
             end
         end
     end
@@ -153,7 +226,7 @@ local function onCreateItem(payload)
     local meta = payload.metadata or {}
     local bagId = meta.bagId
 
-    if type(bagId) == 'string' and Bags.Known[bagId] and not meta.invalid then
+    if (type(bagId) == 'string' and Bags.Known[bagId] or isValidStock(meta)) and not meta.invalid then
         return
     end
 

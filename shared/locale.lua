@@ -29,6 +29,7 @@ Locale = {
 
     ['item.label']           = '%s',
     ['item.description']     = 'Bolsa de uniforme · %s · ID %s',
+    ['item.stock_description'] = 'Bolsa de uniforme · %s · nova (o número de série é criado no primeiro uso)',
     ['item.invalid_label']   = 'Bolsa não reconhecida',
     ['item.invalid_desc']    = 'Esta bolsa não foi emitida pelo sistema e não tem efeito.',
 

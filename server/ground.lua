@@ -44,16 +44,25 @@ function Ground.PlaceFromSlot(src, slot)
     local item = exports.ox_inventory:GetSlot(src, slot)
     if not item or item.name ~= ITEM then return end
     local meta = item.metadata or {}
-    if meta.invalid or type(meta.bagId) ~= 'string' then return notify(src, 'block.unrecognized') end
-
-    local bag = Bags.Get(meta.bagId)
-    if not bag or bag.status == 'falha_emissao' then return notify(src, 'block.unrecognized') end
+    local fromStock = not meta.invalid and Bags.IsValidStock(meta)
+    if not fromStock and (meta.invalid or type(meta.bagId) ~= 'string') then return notify(src, 'block.unrecognized') end
 
     local reason = Change.BlockedReason(src)
     if reason then return notify(src, reason) end
 
     local data = Utils.GetPlayerData(src)
     if not data then return end
+
+    -- Bolsa de uma pilha de estoque: ganha ID e registro agora (D213).
+    local bag
+    if fromStock then
+        bag = Bags.Materialize(meta, data.citizenid)
+        if not bag then return notify(src, 'block.unrecognized') end
+        Utils.Audit('emissao', 'primeiro_uso', { src = src, org = bag.org, uniformId = bag.uniform_id, bagId = bag.bag_id })
+    else
+        bag = Bags.Get(meta.bagId)
+    end
+    if not bag or bag.status == 'falha_emissao' then return notify(src, 'block.unrecognized') end
 
     -- Uma bolsa que já está no chão não pode estar também num inventário (D189).
     if bags[bag.bag_id] or Bags.CheckDuplicate(bag, 'player', data.citizenid) then
@@ -77,6 +86,10 @@ function Ground.PlaceFromSlot(src, slot)
 
     if not exports.ox_inventory:RemoveItem(src, ITEM, 1, nil, slot) then
         MySQL.update.await('DELETE FROM `sub_ground_bags` WHERE `bag_id` = ?', { bag.bag_id })
+        if fromStock then
+            Bags.Known[bag.bag_id] = nil
+            MySQL.update.await("UPDATE `sub_bags` SET `status` = 'falha_emissao' WHERE `bag_id` = ?", { bag.bag_id })
+        end
         return notify(src, 'block.invalid_request')
     end
 

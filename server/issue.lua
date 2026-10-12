@@ -1,18 +1,8 @@
 -- Emissão em lote para o baú da organização (D24–D33, D115, D157).
--- Cada bolsa é gravada no banco ANTES de virar item; falha no AddItem marca `falha_emissao`
--- e nenhum item órfão fica para trás.
+-- As bolsas entram no baú como pilha de estoque por uniforme (D213); o lote registra quantas
+-- foram entregues. O ID individual nasce no primeiro uso.
 
 Issue = {}
-
-local function generateBagId()
-    for _ = 1, 10 do
-        local id = Utils.NewBagId()
-        if not Bags.Known[id] and not MySQL.scalar.await('SELECT 1 FROM `sub_bags` WHERE `bag_id` = ?', { id }) then
-            return id
-        end
-    end
-    return nil
-end
 
 --- Emite `qty` bolsas do uniforme no baú `stashId`.
 ---@return table|nil result { requested, delivered, failed, batchId }, string|nil errorKey
@@ -37,33 +27,15 @@ function Issue.Run(src, uniformId, qty, stashId)
         [[INSERT INTO `sub_issue_batches` (`idempotency_key`, `org`, `uniform_id`, `stash_id`, `requested`, `requested_by`)
           VALUES (?, ?, ?, ?, ?, ?)]], { key, uniform.org, uniform.id, stashId, qty, author })
 
-    local delivered, failed = 0, 0
-
-    for _ = 1, qty do
-        local bagId = generateBagId()
-        local ok = false
-
-        if bagId then
-            MySQL.insert.await(
-                [[INSERT INTO `sub_bags` (`bag_id`, `uniform_id`, `org`, `batch_id`, `status`, `location_type`, `location_id`, `issued_by`, `last_activity_kind`)
-                  VALUES (?, ?, ?, ?, 'em_estoque', 'stash', ?, ?, 'emissao')]],
-                { bagId, uniform.id, uniform.org, batchId, stashId, author })
-
-            Bags.Known[bagId] = true
-            local bag = Bags.Get(bagId)
-            local metadata = Bags.BuildMetadata(bag, uniform)
-
-            if exports.ox_inventory:CanCarryItem(stashId, Config.ItemName, 1, metadata) then
-                ok = exports.ox_inventory:AddItem(stashId, Config.ItemName, 1, metadata) and true or false
-            end
-
-            if not ok then
-                Bags.Known[bagId] = nil
-                MySQL.update.await("UPDATE `sub_bags` SET `status` = 'falha_emissao' WHERE `bag_id` = ?", { bagId })
-            end
+    -- D213: as bolsas entram como UMA pilha de estoque do uniforme, ainda sem ID; cada uma
+    -- ganha ID e registro no primeiro uso (Ground.PlaceFromSlot).
+    Bags.StockUniforms[uniform.id] = uniform.org
+    local metadata = Bags.StockMetadata(uniform)
+    local delivered, failed = 0, qty
+    if exports.ox_inventory:CanCarryItem(stashId, Config.ItemName, qty, metadata) then
+        if exports.ox_inventory:AddItem(stashId, Config.ItemName, qty, metadata) then
+            delivered, failed = qty, 0
         end
-
-        if ok then delivered = delivered + 1 else failed = failed + 1 end
     end
 
     local status = failed == 0 and 'concluido' or (delivered == 0 and 'falhou' or 'parcial')

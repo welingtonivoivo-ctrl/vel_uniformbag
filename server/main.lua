@@ -92,6 +92,7 @@ CreateThread(function()
     if Database.Migrate() then
         Change.RevertInterrupted()
         log(L('startup.known_bags', Bags.LoadKnown()))
+        Bags.LoadStockUniforms()
         log(L('startup.ground', Ground.Load()))
         log(L('startup.points', Points.Load()))
         local okRelabel, fixed = pcall(Bags.ResyncStashes)
