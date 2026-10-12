@@ -95,6 +95,10 @@
 
 .pn-variant { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; }
 .pn-variant + .pn-variant { border-top: 1px solid var(--color-border); }
+.pn-variants { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 8px; }
+.pn-variant-card { border: 1px solid var(--color-border); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; opacity: .7; }
+.pn-variant-card.mine { opacity: 1; border-color: var(--color-primary); }
+.pn-variant-card button[disabled] { opacity: .45; cursor: not-allowed; }
 
 .pn-chips { display: flex; gap: 8px; flex-wrap: wrap; }
 .pn-chip { padding: 6px 12px; border-radius: 999px; background: var(--color-surface); border: 1px solid var(--color-border); font-size: 12px; }

@@ -113,9 +113,15 @@ lib.callback.register('vel_uniformbag:panel:uniforms', function(src, org)
         local grades = MySQL.query.await('SELECT `grade` FROM `sub_uniform_grades` WHERE `uniform_id` = ? ORDER BY `grade`', { u.id }) or {}
         u.grades = {}
         for _, g in ipairs(grades) do u.grades[#u.grades + 1] = g.grade end
-        u.bags = MySQL.scalar.await("SELECT COUNT(*) FROM `sub_bags` WHERE `uniform_id` = ? AND `status` <> 'falha_emissao'", { u.id }) or 0
+        u.bags = tonumber(MySQL.scalar.await("SELECT COALESCE(SUM(`delivered`), 0) FROM `sub_issue_batches` WHERE `uniform_id` = ?", { u.id })) or 0
     end
-    return { uniforms = rows }
+    -- Modelo atual de quem abriu o painel: mostra qual versão pode ser gravada agora.
+    local model = GetEntityModel(GetPlayerPed(src)) & 0xFFFFFFFF
+    local myModel
+    for _, name in ipairs({ 'mp_m_freemode_01', 'mp_f_freemode_01' }) do
+        if model == joaat(name) & 0xFFFFFFFF then myModel = name end
+    end
+    return { uniforms = rows, myModel = myModel }
 end)
 
 --- Criar ou editar (nome, modo de autorização, cargos, ativo). A roupa é gravada à parte.
@@ -171,7 +177,7 @@ lib.callback.register('vel_uniformbag:panel:saveUniform', function(src, form)
 end)
 
 --- Grava a roupa que o jogador está vestindo como versão do uniforme (D17, D57–D59).
-lib.callback.register('vel_uniformbag:panel:captureVariant', function(src, uniformId)
+lib.callback.register('vel_uniformbag:panel:captureVariant', function(src, uniformId, expectedModel)
     local uniform = Uniforms.Get(tonumber(uniformId))
     if not uniform then return { error = 'cmd.uniform_unknown' } end
     local ok, err = guard(src, uniform.org)
@@ -179,6 +185,11 @@ lib.callback.register('vel_uniformbag:panel:captureVariant', function(src, unifo
 
     local clothing = Clothing.Sanitize(lib.callback.await('vel_uniformbag:client:capture', src))
     if not clothing then return { error = 'block.appearance_invalid' } end
+    -- Cada botão grava só a versão do seu modelo: evita sobrescrever a outra por engano.
+    if expectedModel ~= 'mp_m_freemode_01' and expectedModel ~= 'mp_f_freemode_01' then return { error = 'block.invalid_request' } end
+    if clothing.model ~= expectedModel then
+        return { error = expectedModel == 'mp_f_freemode_01' and 'panel.need_female' or 'panel.need_male' }
+    end
 
     Uniforms.SaveVariant(src, uniform.id, clothing)
     return { ok = true, model = clothing.model }
@@ -191,6 +202,32 @@ lib.callback.register('vel_uniformbag:panel:removeVariant', function(src, unifor
     if not ok then return { error = err } end
     MySQL.update.await('DELETE FROM `sub_uniform_variants` WHERE `uniform_id` = ? AND `model` = ?', { uniform.id, tostring(model) })
     Utils.Audit('admin', 'versao_uniforme_removida', { src = src, org = uniform.org, uniformId = uniform.id, data = { model = model } })
+    return { ok = true }
+end)
+
+--- Excluir uniforme: só se nunca teve bolsa entregue (as entregues dependem dele). Leva junto as
+--- tentativas de emissão que falharam, as versões e os cargos (D214).
+lib.callback.register('vel_uniformbag:panel:deleteUniform', function(src, uniformId)
+    local uniform = Uniforms.Get(tonumber(uniformId))
+    if not uniform then return { error = 'cmd.uniform_unknown' } end
+    local ok, err = guard(src, uniform.org)
+    if not ok then return { error = err } end
+
+    local delivered = tonumber(MySQL.scalar.await(
+        "SELECT COALESCE(SUM(`delivered`), 0) FROM `sub_issue_batches` WHERE `uniform_id` = ?", { uniform.id })) or 0
+    local liveBags = tonumber(MySQL.scalar.await(
+        "SELECT COUNT(*) FROM `sub_bags` WHERE `uniform_id` = ? AND `status` <> 'falha_emissao'", { uniform.id })) or 0
+    if delivered > 0 or liveBags > 0 then return { error = 'panel.delete_blocked' } end
+
+    local done = MySQL.transaction.await({
+        { query = "DELETE FROM `sub_bags` WHERE `uniform_id` = ? AND `status` = 'falha_emissao'", values = { uniform.id } },
+        { query = "DELETE FROM `sub_issue_batches` WHERE `uniform_id` = ?", values = { uniform.id } },
+        { query = "DELETE FROM `sub_uniforms` WHERE `id` = ?", values = { uniform.id } },
+    })
+    if not done then return { error = 'block.invalid_request' } end
+
+    Bags.StockUniforms[uniform.id] = nil
+    Utils.Audit('admin', 'uniforme_excluido', { src = src, org = uniform.org, data = { uniforme = uniform.name, id = uniform.id } })
     return { ok = true }
 end)
 

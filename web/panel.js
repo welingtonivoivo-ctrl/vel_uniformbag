@@ -291,6 +291,7 @@
         const res = await call('uniforms', P.org);
         if (!P) return;
         P.uniforms = res.uniforms || [];
+        P.myModel = res.myModel || null;
         if (selectId) P.edit = formFrom(P.uniforms.find((u) => u.id === selectId));
         renderUniforms(res.message);
     }
@@ -365,27 +366,45 @@
             setMsg('pn-edit-msg', t.saved, true);
         };
 
+        // Uma área por versão: cada botão só grava a versão do próprio modelo (D214).
         const versions = f.id ? el('div', { class: 'pn-section' },
             el('h3', { text: t.versions }),
             el('div', { class: 'pn-item-sub', text: t.capture_hint }),
-            MODELS.map(([model, key]) => el('div', { class: 'pn-variant' },
-                el('div', {}, el('b', { text: t[key] }), ' ',
-                    el('span', { class: `badge ${f.models.includes(model) ? '' : 'badge-warn'}`, text: f.models.includes(model) ? '✓' : t.missing })),
-                el('div', { class: 'pn-row' },
-                    f.models.includes(model) ? el('button', { class: 'btn btn-danger btn-sm', text: t.remove, onclick: async () => {
-                        const res = await call('removeVariant', f.id, model);
-                        if (res.error) return setMsg('pn-edit-msg', res.message, false);
-                        await loadUniforms(f.id);
-                    } }) : null))),
-            el('div', { class: 'pn-row' },
-                el('button', { class: 'btn btn-primary', text: t.capture, onclick: async () => {
-                    setMsg('pn-edit-msg', t.loading, true);
-                    const res = await call('captureVariant', f.id);
-                    if (!P) return;
-                    if (res.error) return setMsg('pn-edit-msg', res.message, false);
-                    await loadUniforms(f.id);
-                    setMsg('pn-edit-msg', `${t.captured} (${res.model === 'mp_f_freemode_01' ? t.female : t.male})`, true);
-                } }))) : null;
+            el('div', { class: 'pn-variants' }, MODELS.map(([model, key]) => {
+                const has = f.models.includes(model);
+                const mine = P.myModel === model;
+                return el('div', { class: `pn-variant-card ${mine ? 'mine' : ''}` },
+                    el('div', {}, el('b', { text: t[key] }), ' ',
+                        el('span', { class: `badge ${has ? '' : 'badge-warn'}`, text: has ? '✓' : t.missing })),
+                    el('div', { class: 'pn-item-sub', text: mine ? t.you_are : (key === 'female' ? t.need_female : t.need_male) }),
+                    el('div', { class: 'pn-row' },
+                        el('button', { class: 'btn btn-primary btn-sm', disabled: !mine || undefined,
+                            text: key === 'female' ? t.capture_female : t.capture_male, onclick: async () => {
+                            setMsg('pn-edit-msg', t.loading, true);
+                            const res = await call('captureVariant', f.id, model);
+                            if (!P) return;
+                            if (res.error) return setMsg('pn-edit-msg', res.message, false);
+                            await loadUniforms(f.id);
+                            setMsg('pn-edit-msg', `${t.captured} (${t[key]})`, true);
+                        } }),
+                        has ? el('button', { class: 'btn btn-danger btn-sm', text: t.remove, onclick: async () => {
+                            const res = await call('removeVariant', f.id, model);
+                            if (res.error) return setMsg('pn-edit-msg', res.message, false);
+                            await loadUniforms(f.id);
+                        } }) : null));
+            }))) : null;
+
+        // Excluir: só uniformes que nunca tiveram bolsa entregue; pede um segundo clique.
+        let armed = false;
+        const del = f.id ? el('button', { class: 'btn btn-danger', text: t.delete_uniform, title: t.delete_hint, onclick: async (e) => {
+            if (!armed) { armed = true; e.target.textContent = t.confirm_delete; setTimeout(() => { armed = false; if (e.target.isConnected) e.target.textContent = t.delete_uniform; }, 4000); return; }
+            const res = await call('deleteUniform', f.id);
+            if (!P) return;
+            if (res.error) return setMsg('pn-edit-msg', res.message, false);
+            P.edit = null;
+            await loadUniforms();
+            setMsg('pn-edit-msg', t.deleted, true);
+        } }) : null;
 
         return el('div', { class: 'pn-main' },
             el('h2', { text: f.id ? `${t.edit}: ${f.name}` : t.new_uniform }),
@@ -400,7 +419,8 @@
                 el('input', { type: 'checkbox', checked: f.active !== false, onchange: (e) => { f.active = e.target.checked; } }), t.active),
             el('div', { class: 'pn-row' },
                 el('button', { class: 'btn btn-primary', text: t.save, onclick: save }),
-                el('button', { class: 'btn btn-secondary', text: t.cancel, onclick: () => { P.edit = null; renderUniforms(); } })),
+                el('button', { class: 'btn btn-secondary', text: t.cancel, onclick: () => { P.edit = null; renderUniforms(); } }),
+                del),
             el('div', { class: 'pn-msg', id: 'pn-edit-msg' }),
             versions);
     }

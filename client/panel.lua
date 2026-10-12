@@ -5,7 +5,7 @@ local embedded = false -- true quando o painel está dentro da aba Plugins do mr
 
 -- Só estas funções do servidor podem ser chamadas pela NUI do painel.
 local ALLOWED = {
-    uniforms = true, saveUniform = true, captureVariant = true, removeVariant = true,
+    uniforms = true, saveUniform = true, captureVariant = true, removeVariant = true, deleteUniform = true,
     stashes = true, issue = true, bags = true, bagHistory = true,
     alertSettings = true, saveAlertSettings = true, audit = true,
     findCharacter = true, recoverySources = true, createRecovery = true, cancelRecovery = true,
@@ -28,6 +28,8 @@ local function panelLocale()
         'reason_hint', 'register', 'pending', 'cancel_rec', 'no_results', 'recovery_note', 'choose_source',
         'tab_points', 'points_hint', 'point_label', 'point_placeholder', 'point_add', 'points_staff_only',
         'activate', 'deactivate', 'discord', 'webhook_on', 'webhook_off', 'webhook_org', 'webhook_admin', 'discord_hint',
+        'capture_male', 'capture_female', 'you_are', 'need_male', 'need_female', 'delete_uniform', 'delete_hint',
+        'confirm_delete', 'deleted',
     }
     local t = {}
     for _, k in ipairs(keys) do t[k] = L('panel.' .. k) end
