@@ -5,7 +5,7 @@ lua54 'yes'
 name 'street_uniformbag'
 author 'Street Roleplay'
 description 'Sistema de Bolsas de Uniformes do Street Roleplay'
-version '0.1.0'
+version '0.2.0'
 
 shared_scripts {
     '@ox_lib/init.lua',
@@ -15,6 +15,9 @@ shared_scripts {
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
+    'server/db/schema.lua',
+    'server/db/migrations.lua',
+    'server/permissions.lua',
     'server/main.lua',
 }
 

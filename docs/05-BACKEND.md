@@ -2,6 +2,7 @@
 
 Versão: 1.1 (consolidada, para aprovação geral) — 2026-10-12
 Banco: MariaDB (oxmysql). Prefixo das tabelas: `sub_`. Charset `utf8mb4`. Nenhuma tabela de terceiros é alterada.
+**Ajustes técnicos da etapa 2 (D201):** (1) colunas de data/hora usam `DATETIME` em vez de `TIMESTAMP` — o `TIMESTAMP` do MariaDB para em 2038, e a auditoria é permanente (D161); (2) colunas JSON (`LONGTEXT`) recebem `CHECK (JSON_VALID(...))`; (3) `sub_operations` ganhou `restored_at` (quando a aparência anterior foi reaplicada após reversão, §2.13). A implementação está em `server/db/schema.lua`.
 
 ## 1. Dados
 
@@ -188,6 +189,7 @@ Regras: só o próprio `citizenid` aplica; transição `aguardando → concluida
 | bag_version | INT UNSIGNED | sim (versão da bolsa no início) |
 | created_at / finished_at | TIMESTAMP(3) | sim / não |
 | saved_at | TIMESTAMP(3) | não (chegada do `saveAppearance` do jogador após a conclusão, D197) |
+| restored_at | DATETIME(3) | não (aparência anterior reaplicada ao jogador após a reversão, D201) |
 Índice: `idx_char_state (citizenid, state)`.
 Regras: `iniciada` gravada no `beginChange`; `confirmChange` faz, na mesma transação, compartimento + versão da bolsa + farda em uso + `state = 'concluida'` (`WHERE token = ? AND state = 'iniciada'`, impede repetição). Ao iniciar o recurso: todas as `iniciada` ⇒ `revertida`. Quando o personagem carrega: se houver operação dele revertida e ainda não reaplicada, o cliente recebe `before_appearance`; se houver `concluida` sem `saved_at`, reaplica `target_appearance`. Registros ficam no banco como parte do histórico (auditoria permanente, D161).
 

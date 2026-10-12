@@ -93,7 +93,7 @@ Versionamento: repositório privado `welingtonivoivo-ctrl/street_uniformbag`, pr
 |---|---|---|---|
 | V1 | Modelo `reh_prop_reh_bag_outfit_01a` existe no jogo (`IsModelInCdimage`) | 1 | **Concluída 2026-10-12:** existe, é válido e carrega (D200) |
 | V2 | Repositório `street_uniformbag` ainda não existe na conta | 1 | **Concluída 2026-10-12:** não existe (consulta `gh repo view`, nada criado) |
-| V3 | Assinaturas exatas de `RegisterPermissions`/`HasPerms`/`RegisterPlugin` em execução | 1–2 | **Concluída no código 2026-10-12:** `HasPerms` não é exportado; verificação por natives ACE (D199). Teste em execução na etapa 2 |
+| V3 | Assinaturas exatas de `RegisterPermissions`/`HasPerms`/`RegisterPlugin` em execução | 1–2 | **Concluída 2026-10-12:** `HasPerms` não é exportado; verificação por natives ACE (D199). Em execução: permissão aparece em Perms, staff reconhecida pelo grupo God, negada com o mri_Qadmin parado, re-registrada quando ele reinicia |
 | V4 | Formato exato do retorno de `getPedAppearance` (para guardar aparência completa e comparar peças) | 3 | Ajustar o mapeamento em `config.lua` |
 | V5 | Chegada de `illenium-appearance:server:saveAppearance` a um segundo ouvinte (`RegisterNetEvent` no nosso recurso) | 3 | Plano B: confirmação de salvamento pelo nosso próprio callback após o `save` |
 | V6 | Payload aceito por `ps-dispatch:server:notify` disparado pelo servidor | 3 | Ajustar o adaptador `psdispatch` (D134) |

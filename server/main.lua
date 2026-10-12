@@ -1,5 +1,5 @@
--- Etapa 1 — Preparação: verifica dependências e integrações ao iniciar.
--- Não acessa o banco e não altera nenhum outro recurso.
+-- Inicialização: verifica dependências e integrações, aplica a migração do banco
+-- (só tabelas sub_*) e registra a permissão de staff no mri_Qadmin.
 
 local RESOURCE = GetCurrentResourceName()
 local PREFIX = '^5[street_uniformbag]^7 '
@@ -86,7 +86,9 @@ end)
 
 CreateThread(function()
     log(L('startup.ok', resourceVersion(RESOURCE)))
-    checkDependencies()
+    if not checkDependencies() then return end
     checkItem()
     checkColor()
+    Database.Migrate()
+    Permissions.RegisterWithQadmin()
 end)

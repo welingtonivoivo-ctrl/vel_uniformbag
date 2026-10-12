@@ -229,6 +229,10 @@ Regra de edição: decisões aprovadas não são reescritas; esclarecimentos e c
 | D199 | 2026-10-12 | **Ajuste técnico da etapa 1 (V3), aprovado pelo dono:** o mri_Qadmin não exporta `HasPerms` (só `RegisterPermissions`, `RegisterPlugin` e outros). A permissão de staff é conferida com natives ACE do FiveM pelos mesmos caminhos do mri_Qadmin (jogador, `char:<citizenid>`, `job.<nome>[.<grau>]`, bypass `qadmin.master`), **sem** herdar o acesso automático de `god`/`admin` (respeita D82) e só com o mri_Qadmin iniciado (D87). Nenhum código do mri_Qadmin é chamado ou alterado. | Etapa 1 |
 | D200 | 2026-10-12 | **Achado técnico da etapa 1:** natives de modelo devolveram `1` em vez de `true` nesta build; todo resultado de native usado em decisão é convertido explicitamente para booleano, e o servidor valida tipos recebidos. V1 confirmada: `reh_prop_reh_bag_outfit_01a` existe e carrega no jogo. | Etapa 1 |
 
+| D201 | 2026-10-12 | **Ajuste técnico da etapa 2:** datas em `DATETIME` (o `TIMESTAMP` termina em 2038 e a auditoria é permanente); colunas JSON com `CHECK (JSON_VALID)`; `sub_operations.restored_at` para controlar a reaplicação da aparência após reversão (D182). Nenhuma decisão de produto alterada. | Etapa 2 |
+
+| D202 | 2026-10-12 | **Organizações sempre dinâmicas (confirmado com o dono na etapa 2):** nenhuma organização fixa no código; os jobs criados no painel Jobs do mri_Qbossmenu são enviados ao QBox (`CreateJobs`, `mri_Qbossmenu/modules/server/runtime.lua:352`) e o `street_uniformbag` lê `exports.qbx_core:GetJobs()` **no momento de abrir o painel** (nunca uma lista guardada desde o início), para incluir jobs criados com o servidor ligado. Líder continua sendo o cargo de chefe do job (D16/T6, opção A mantida). Gangues ficam fora desta versão. | Etapa 2 |
+
 ### Interpretações (todas confirmadas)
 - **I1 — CONFIRMADA em 2026-10-12 (D180–D186, esclarecida em D192–D194).** Troca segura no mesmo compartimento, numa única operação, depois de confirmada a aplicação. Nada é apagado.
 - **I2 — CONFIRMADA em 2026-10-12 (D187–D191).** Roupas em tabela do banco ligada ao ID da bolsa; o item carrega só o ID e dados leves.

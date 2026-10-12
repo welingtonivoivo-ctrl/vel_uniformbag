@@ -54,7 +54,7 @@ Webhooks e ACE ficam fora deste arquivo (convars privadas e server.cfg).
 |---|---|---|
 | Jogador e emprego | `exports.qbx_core:GetPlayer(src)` → `PlayerData.job.name`, `.grade.level`, `.isboss`, `.type`, `.onduty` | Autorização no momento do uso (D9) |
 | Estado do personagem | `PlayerData.metadata.isdead`, `.inlaststand`, `.ishandcuffed` (QBox, servidor); statebag `Player(src).state.isDead` (ars_ambulancejob); `cache.vehicle` e `IsPedSwimming` (cliente) | Restrições de uso (D154) |
-| Lista de cargos | `exports.qbx_core:GetJobs()` (inclui os cargos sincronizados pelo bossmenu) | Seleção de graduações no cadastro |
+| Lista de cargos | `exports.qbx_core:GetJobs()` (inclui os jobs e cargos criados no painel Jobs do mri_Qbossmenu, que os envia ao QBox por `CreateJobs`) — lida **a cada abertura do painel**, nunca guardada (D202) | Seleção de organização e graduações no cadastro |
 | Mudança de emprego | Eventos de servidor `QBCore:Server:OnJobUpdate (src, job)` e `qbx_core:server:onGroupUpdate (src, name, grade?)` | Reavaliação (D34, D41) |
 | Permissão admin | Registro: `exports.mri_Qadmin:RegisterPlugin({ ..., requiredPerms, permDefs })` (ou `RegisterPermissions`). Verificação: **natives ACE do FiveM** (`IsPlayerAceAllowed`, `IsPrincipalAceAllowed`) — o mri_Qadmin **não exporta** `HasPerms` (verificado na etapa 1, D199) | Permissão "Gerenciar Bolsas de Uniformes" (D79) |
 | ACE de emergência | `IsPlayerAceAllowed(src, 'street_uniformbag.admin')` | D82 |
