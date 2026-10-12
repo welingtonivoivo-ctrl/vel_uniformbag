@@ -64,14 +64,14 @@
                     el('div', { class: 'pn-header' },
                         el('h1', { text: t.title }),
                         el('label', { class: 'field' }, t.org,
-                            el('select', { id: 'pn-org', onchange: (e) => { P.org = e.target.value; P.edit = null; load(); } },
+                            el('select', { id: 'pn-org', onchange: (e) => { P.org = e.target.value; P.edit = null; remember(); load(); } },
                                 P.data.orgs.map((o) => el('option', { value: o.name, text: `${o.label} (${o.name})` })))),
                         el('button', { class: 'btn btn-secondary', text: t.open_store, title: t.store_hint, onclick: () => nui('openStore') }),
                         el('button', { class: 'btn btn-secondary', text: t.close, onclick: close })),
                     el('div', { class: 'pn-tabs' },
                         [['uniforms', t.tab_uniforms], ['issue', t.tab_issue], ['bags', t.tab_bags], ['alerts', t.tab_alerts], ['points', t.tab_points], ['stashrules', t.tab_stashes], ['audit', t.tab_audit],
                             P.data.admin ? ['recovery', t.tab_recovery] : null].filter(Boolean).map(([id, label]) =>
-                            el('button', { class: `pn-tab ${P.tab === id ? 'active' : ''}`, text: label, onclick: () => { P.tab = id; shell(); load(); } }))),
+                            el('button', { class: `pn-tab ${P.tab === id ? 'active' : ''}`, text: label, onclick: () => { P.tab = id; remember(); shell(); load(); } }))),
                     el('div', { class: 'pn-body', id: 'pn-body' }))));
         document.getElementById('pn-org').value = P.org;
     }
@@ -561,12 +561,28 @@
                 (res.history || []).map((h) => el('div', { class: 'pn-item-sub', text: `${fmtDate(h.created_at)} · ${h.category}/${h.action}${h.actor_name ? ' · ' + h.actor_name : ''}` }))));
     }
 
+    // ------------------------------------------------------------------ Última organização e aba (D219)
+
+    const TABS = ['uniforms', 'issue', 'bags', 'alerts', 'points', 'stashrules', 'audit', 'recovery'];
+
+    function initialState(data, locale, last) {
+        const orgs = data.orgs || [];
+        const org = orgs.some((o) => o.name === last?.org) ? last.org : orgs[0]?.name;
+        let tab = TABS.includes(last?.tab) ? last.tab : 'uniforms';
+        if (tab === 'recovery' && !data.admin) tab = 'uniforms';
+        return { data, t: locale, org, tab, uniforms: [], edit: null };
+    }
+
+    function remember() {
+        if (P) nui('panelRemember', { org: P.org, tab: P.tab });
+    }
+
     // ------------------------------------------------------------------ Mensagens do cliente
 
     window.addEventListener('message', (event) => {
         const msg = event.data || {};
         if (msg.action === 'panelOpen') {
-            P = { data: msg.data, t: msg.locale, org: msg.data.orgs[0]?.name, tab: 'uniforms', uniforms: [], edit: null };
+            P = initialState(msg.data, msg.locale, msg.last);
             if (/^#[0-9a-fA-F]{6}$/.test(msg.data.color || '')) document.documentElement.style.setProperty('--color-primary', msg.data.color);
             shell();
             load();
@@ -607,7 +623,7 @@
                 document.getElementById('panel-root').replaceChildren(el('div', { class: 'pn-col pn-msg err', text: (res && res.message) || 'Sem acesso.' }));
                 return;
             }
-            P = { data: res.data, t: res.locale, org: res.data.orgs[0]?.name, tab: 'uniforms', uniforms: [], edit: null };
+            P = initialState(res.data, res.locale, res.last);
             if (/^#[0-9a-fA-F]{6}$/.test(res.data.color || '')) document.documentElement.style.setProperty('--color-primary', res.data.color);
             shell();
             load();

@@ -36,11 +36,23 @@ local function panelLocale()
     return t
 end
 
+--- Última organização e aba usadas por esta pessoa, guardadas no próprio jogo dela (D219).
+local function lastView()
+    return { org = GetResourceKvpString('panel_org'), tab = GetResourceKvpString('panel_tab') }
+end
+
+RegisterNUICallback('panelRemember', function(body, cb)
+    cb(true)
+    if type(body) ~= 'table' then return end
+    if type(body.org) == 'string' and #body.org <= 60 then SetResourceKvp('panel_org', body.org) end
+    if type(body.tab) == 'string' and #body.tab <= 20 then SetResourceKvp('panel_tab', body.tab) end
+end)
+
 RegisterNetEvent('vel_uniformbag:client:panelOpen', function(data)
     if (panelOpen and not embedded) or Bag.IsOpen() then return end
     embedded = false
     panelOpen = true
-    SendNUIMessage({ action = 'panelOpen', data = data, locale = panelLocale() })
+    SendNUIMessage({ action = 'panelOpen', data = data, locale = panelLocale(), last = lastView() })
     SetNuiFocus(true, true)
 end)
 
@@ -69,7 +81,7 @@ RegisterNUICallback('panelBootstrap', function(_, cb)
     end
     embedded = true
     panelOpen = true
-    cb({ data = data, locale = panelLocale() })
+    cb({ data = data, locale = panelLocale(), last = lastView() })
 end)
 
 RegisterNUICallback('panel', function(body, cb)
