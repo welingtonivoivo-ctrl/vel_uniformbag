@@ -27,7 +27,8 @@ lib.addCommand('ubag_uniforme', {
         { name = 'org', type = 'string', help = L('cmd.param_org') },
         { name = 'nome', type = 'string', help = L('cmd.param_name') },
         { name = 'modo', type = 'string', help = L('cmd.param_mode') },
-        { name = 'graduacoes', type = 'string', help = L('cmd.param_grades') },
+        -- Sem `type`: o ox_lib recusa texto "string" que pareça número (ex.: "1").
+        { name = 'graduacoes', help = L('cmd.param_grades') },
     },
 }, function(src, args)
     if not Database.Ready then return notify(src, 'block.unavailable', 'error') end
@@ -88,7 +89,7 @@ lib.addCommand('ubag_alerta', {
     params = {
         { name = 'org', type = 'string', help = L('cmd.param_org') },
         { name = 'modo', type = 'string', help = L('cmd.param_alert_mode') },
-        { name = 'tipos', type = 'string', help = L('cmd.param_job_types'), optional = true },
+        { name = 'tipos', help = L('cmd.param_job_types'), optional = true },
     },
 }, function(src, args)
     if not allowed(src, args.org) then return notify(src, 'cmd.no_permission', 'error') end

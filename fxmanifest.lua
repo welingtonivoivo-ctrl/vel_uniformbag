@@ -28,6 +28,7 @@ server_scripts {
     'server/alerts.lua',
     'server/change.lua',
     'server/commands.lua',
+    'server/panel.lua',
     'server/main.lua',
 }
 
@@ -36,6 +37,7 @@ client_scripts {
     'client/appearance.lua',
     'client/bag.lua',
     'client/ground.lua',
+    'client/panel.lua',
 }
 
 ui_page 'web/index.html'
@@ -44,6 +46,8 @@ files {
     'web/index.html',
     'web/style.css',
     'web/app.js',
+    'web/panel.css',
+    'web/panel.js',
 }
 
 -- Obrigatórias (TRD §1). Opcionais (mri_Qadmin, ps-dispatch, mri_Qbossmenu,
