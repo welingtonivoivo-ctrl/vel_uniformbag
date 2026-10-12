@@ -253,7 +253,10 @@ local function orgStashes(org)
             local stashes = def.stashes or (def.definition and def.definition.stashes) or {}
             for _, s in ipairs(stashes) do
                 if type(s) == 'table' and type(s.id) == 'string' then
-                    list[#list + 1] = { id = s.id, label = s.label or s.id }
+                    local c = type(s.coords) == 'table' and s.coords or nil
+                    local x, y, z = c and tonumber(c.x), c and tonumber(c.y), c and tonumber(c.z)
+                    local hasCoords = x and y and z and not (x == 0 and y == 0 and z == 0)
+                    list[#list + 1] = { id = s.id, label = s.label or s.id, coords = hasCoords and { x = x, y = y, z = z } or nil }
                 end
             end
         end
@@ -263,16 +266,44 @@ end
 
 lib.callback.register('vel_uniformbag:panel:stashes', function(src, org)
     if not guard(src, org) then return {} end
-    return orgStashes(org)
+    local list = orgStashes(org)
+    for _, st in ipairs(list) do st.model = StashRules and StashRules.Get(st.id) or nil; st.coords = nil end
+    return list
 end)
 
 --- Regras de modelo por baú (D215).
+--- Regras de modelo por baú (D215). Staff/emergência veem os baús de TODAS as organizações,
+--- agrupados; líder vê só os da própria (D217).
 lib.callback.register('vel_uniformbag:panel:stashRules', function(src, org)
     local ok, err = guard(src, org)
     if not ok then return { error = err } end
-    local list = orgStashes(org)
-    for _, s in ipairs(list) do s.model = StashRules.Get(s.id) or '' end
-    return { stashes = list }
+    local admin = isAdmin(src)
+    local groups = {}
+    for _, o in ipairs(admin and orgsFor(src) or { { name = org, label = org } }) do
+        local list = orgStashes(o.name)
+        if #list > 0 then
+            for _, st in ipairs(list) do
+                st.model = StashRules.Get(st.id) or ''
+                st.canTeleport = admin and st.coords ~= nil
+                st.coords = nil
+            end
+            groups[#groups + 1] = { org = o.name, label = o.label, stashes = list }
+        end
+    end
+    return { groups = groups }
+end)
+
+--- Teleporta a staff até o baú (D217).
+lib.callback.register('vel_uniformbag:panel:teleportStash', function(src, org, stashId)
+    if not isAdmin(src) then return { error = 'cmd.no_permission' } end
+    for _, st in ipairs(orgStashes(org)) do
+        if st.id == stashId and st.coords then
+            SetEntityCoords(GetPlayerPed(src), st.coords.x + 0.0, st.coords.y + 0.0, st.coords.z + 0.0, false, false, false, false)
+            Utils.Audit('admin', 'teleporte_bau', { src = src, org = org, data = { bau = stashId } })
+            return { ok = true }
+        end
+    end
+    return { error = 'panel.no_coords' }
 end)
 
 lib.callback.register('vel_uniformbag:panel:setStashRule', function(src, org, stashId, model)

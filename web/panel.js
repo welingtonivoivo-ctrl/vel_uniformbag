@@ -143,31 +143,42 @@
         if (!P) return;
         if (res.error) return document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-msg err', text: res.message }));
         const options = [['', t.rule_all], ['mp_m_freemode_01', t.rule_male], ['mp_f_freemode_01', t.rule_female]];
+        const groups = res.groups || [];
+
+        const row = (g, s) => el('tr', {},
+            el('td', {}, s.label, el('div', { class: 'pn-item-sub mono', text: s.id })),
+            el('td', {}, el('select', { onchange: async (e) => {
+                const r = await call('setStashRule', g.org, s.id, e.target.value);
+                if (r.error) return setMsg('pn-stash-msg', r.message, false);
+                setMsg('pn-stash-msg', `${t.saved} ${s.label}: ${options.find(([v]) => v === e.target.value)[1]}`, true);
+            } }, options.map(([v, label]) => el('option', { value: v, text: label, selected: s.model === v || undefined })))),
+            el('td', {}, el('div', { class: 'pn-row' },
+                s.canTeleport ? el('button', { class: 'btn btn-secondary btn-sm', text: t.teleport, onclick: async () => {
+                    const r = await call('teleportStash', g.org, s.id);
+                    if (r.error) return setMsg('pn-stash-msg', r.message, false);
+                    close();
+                } }) : null,
+                el('button', { class: 'btn btn-danger btn-sm', text: t.clear_stash, title: t.clear_hint, onclick: async (e) => {
+                    if (e.target.dataset.armed !== '1') {
+                        e.target.dataset.armed = '1'; e.target.textContent = t.confirm_clear;
+                        setTimeout(() => { if (e.target.isConnected) { e.target.dataset.armed = ''; e.target.textContent = t.clear_stash; } }, 4000);
+                        return;
+                    }
+                    e.target.dataset.armed = ''; e.target.textContent = t.clear_stash;
+                    const r = await call('clearStash', g.org, s.id);
+                    if (r.error) return setMsg('pn-stash-msg', r.message, false);
+                    setMsg('pn-stash-msg', t.cleared.replace('%s', r.removed).replace('%s', r.kept), true);
+                } }))));
 
         document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-main' },
             el('div', { class: 'pn-item-sub', text: t.stash_rules_hint }),
             el('div', { class: 'pn-msg', id: 'pn-stash-msg' }),
-            (res.stashes || []).length === 0 ? el('div', { class: 'pn-empty', text: t.no_stash }) :
-                el('table', { class: 'pn-table' },
-                    el('thead', {}, el('tr', {}, [t.stash, t.who_opens, ''].map((h) => el('th', { text: h })))),
-                    el('tbody', {}, res.stashes.map((s) => el('tr', {},
-                        el('td', {}, s.label, el('div', { class: 'pn-item-sub mono', text: s.id })),
-                        el('td', {}, el('select', { onchange: async (e) => {
-                            const r = await call('setStashRule', P.org, s.id, e.target.value);
-                            if (r.error) return setMsg('pn-stash-msg', r.message, false);
-                            setMsg('pn-stash-msg', t.saved, true);
-                        } }, options.map(([v, label]) => el('option', { value: v, text: label, selected: s.model === v || undefined })))),
-                        el('td', {}, el('button', { class: 'btn btn-danger btn-sm', text: t.clear_stash, title: t.clear_hint, onclick: async (e) => {
-                            if (e.target.dataset.armed !== '1') {
-                                e.target.dataset.armed = '1'; e.target.textContent = t.confirm_clear;
-                                setTimeout(() => { if (e.target.isConnected) { e.target.dataset.armed = ''; e.target.textContent = t.clear_stash; } }, 4000);
-                                return;
-                            }
-                            e.target.dataset.armed = ''; e.target.textContent = t.clear_stash;
-                            const r = await call('clearStash', P.org, s.id);
-                            if (r.error) return setMsg('pn-stash-msg', r.message, false);
-                            setMsg('pn-stash-msg', t.cleared.replace('%s', r.removed).replace('%s', r.kept), true);
-                        } }))))))));
+            groups.length === 0 ? el('div', { class: 'pn-empty', text: t.no_stash }) :
+                groups.map((g) => el('div', { class: 'pn-section' },
+                    el('h3', { text: `${g.label} (${g.org})` }),
+                    el('table', { class: 'pn-table' },
+                        el('thead', {}, el('tr', {}, [t.stash, t.who_opens, ''].map((h) => el('th', { text: h })))),
+                        el('tbody', {}, g.stashes.map((s) => row(g, s))))))));
     }
 
     // ------------------------------------------------------------------ Alertas e logs
@@ -475,12 +486,12 @@
             el('div', { class: 'pn-row' },
                 el('label', { class: 'field' }, t.uniform,
                     el('select', { onchange: (e) => { form.uniform = Number(e.target.value); } },
-                        usable.map((u) => el('option', { value: u.id, text: u.name })))),
+                        usable.map((u) => el('option', { value: u.id, text: `${u.name} (${MODELS.filter(([m]) => u.models.includes(m)).map(([, k]) => t[k]).join(' + ')})` })))),
                 el('label', { class: 'field' }, `${t.quantity} (1–${P.data.maxBatch})`,
                     el('input', { type: 'number', min: 1, max: P.data.maxBatch, value: 1, onchange: (e) => { form.qty = Number(e.target.value); } })),
                 el('label', { class: 'field' }, t.stash,
                     list.length > 0
-                        ? el('select', { onchange: (e) => { form.stash = e.target.value; } }, list.map((s) => el('option', { value: s.id, text: `${s.label} (${s.id})` })))
+                        ? el('select', { onchange: (e) => { form.stash = e.target.value; } }, list.map((s) => el('option', { value: s.id, text: `${s.label}${s.model === 'mp_f_freemode_01' ? ' — ' + t.rule_female : s.model === 'mp_m_freemode_01' ? ' — ' + t.rule_male : ''} (${s.id})` })))
                         : el('input', { type: 'text', placeholder: t.no_stash, oninput: (e) => { form.stash = e.target.value.trim(); } }))),
             usable.length === 0 ? el('div', { class: 'pn-empty', text: t.empty_uniforms }) : null,
             el('div', { class: 'pn-row' },

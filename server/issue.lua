@@ -19,6 +19,12 @@ function Issue.Run(src, uniformId, qty, stashId)
     if type(stashId) ~= 'string' or #stashId == 0 or #stashId > 80 then return nil, 'cmd.stash_invalid' end
     if not exports.ox_inventory:GetInventory(stashId, false) then return nil, 'cmd.stash_invalid' end
 
+    -- Baú só masculino/feminino aceita só uniforme com a versão daquele modelo (D217).
+    local required = StashRules and StashRules.Get(stashId)
+    if required and not Uniforms.GetVariant(uniform.id, required) then
+        return nil, required == 'mp_f_freemode_01' and 'cmd.stash_needs_female' or 'cmd.stash_needs_male'
+    end
+
     local data = Utils.GetPlayerData(src)
     local author = data and data.citizenid or 'console'
     local key = Utils.Uuid()
