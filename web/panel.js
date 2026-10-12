@@ -1,4 +1,4 @@
-// Painel de gestão — parte 1: Uniformes, Emissão, Bolsas (03-FLUXO §2.2, D205, D206).
+// Painel de gestão: Uniformes, Bolsas, Alertas, Pontos, Baús, Auditoria, Recuperação (03-FLUXO §2.2, D205, D222).
 // Só monta a tela e repassa pedidos; o servidor valida perfil e dados em toda chamada.
 'use strict';
 
@@ -69,7 +69,7 @@
                         el('button', { class: 'btn btn-secondary', text: t.open_store, title: t.store_hint, onclick: () => nui('openStore') }),
                         el('button', { class: 'btn btn-secondary', text: t.close, onclick: close })),
                     el('div', { class: 'pn-tabs' },
-                        [['uniforms', t.tab_uniforms], ['issue', t.tab_issue], ['bags', t.tab_bags], ['alerts', t.tab_alerts], ['points', t.tab_points], ['stashrules', t.tab_stashes], ['audit', t.tab_audit],
+                        [['uniforms', t.tab_uniforms], ['bags', t.tab_bags], ['alerts', t.tab_alerts], ['points', t.tab_points], ['stashrules', t.tab_stashes], ['audit', t.tab_audit],
                             P.data.admin ? ['recovery', t.tab_recovery] : null].filter(Boolean).map(([id, label]) =>
                             el('button', { class: `pn-tab ${P.tab === id ? 'active' : ''}`, text: label, onclick: () => { P.tab = id; remember(); shell(); load(); } }))),
                     el('div', { class: 'pn-body', id: 'pn-body' }))));
@@ -92,7 +92,6 @@
         const body = document.getElementById('pn-body');
         body.replaceChildren(el('div', { class: 'pn-col pn-empty', text: P.t.loading }));
         if (P.tab === 'uniforms') return loadUniforms();
-        if (P.tab === 'issue') return loadIssue();
         if (P.tab === 'alerts') return loadAlerts();
         if (P.tab === 'audit') return loadAudit();
         if (P.tab === 'recovery') return loadRecovery();
@@ -452,7 +451,7 @@
             if (res.error) return setMsg('pn-edit-msg', res.message, false);
             P.edit = null;
             await loadUniforms();
-            setMsg('pn-edit-msg', t.deleted, true);
+            setMsg('pn-edit-msg', res.deactivated ? t.deleted_deactivated : t.deleted, true);
         } }) : null;
 
         return el('div', { class: 'pn-main' },
@@ -472,38 +471,6 @@
                 del),
             el('div', { class: 'pn-msg', id: 'pn-edit-msg' }),
             versions);
-    }
-
-    // ------------------------------------------------------------------ Emissão
-
-    async function loadIssue() {
-        const t = P.t;
-        const [res, stashes] = await Promise.all([call('uniforms', P.org), call('stashes', P.org)]);
-        if (!P) return;
-        const usable = (res.uniforms || []).filter((u) => u.active && u.models.length > 0);
-        const list = Array.isArray(stashes) ? stashes : [];
-
-        const form = { uniform: usable[0]?.id, qty: 1, stash: list[0]?.id || '' };
-        document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-main' },
-            el('div', { class: 'pn-row' },
-                el('label', { class: 'field' }, t.uniform,
-                    el('select', { onchange: (e) => { form.uniform = Number(e.target.value); } },
-                        usable.map((u) => el('option', { value: u.id, text: `${u.name} (${MODELS.filter(([m]) => u.models.includes(m)).map(([, k]) => t[k]).join(' + ')})` })))),
-                el('label', { class: 'field' }, `${t.quantity} (1–${P.data.maxBatch})`,
-                    el('input', { type: 'number', min: 1, max: P.data.maxBatch, value: 1, onchange: (e) => { form.qty = Number(e.target.value); } })),
-                el('label', { class: 'field' }, t.stash,
-                    list.length > 0
-                        ? el('select', { onchange: (e) => { form.stash = e.target.value; } }, list.map((s) => el('option', { value: s.id, text: `${s.label}${s.model === 'mp_f_freemode_01' ? ' — ' + t.rule_female : s.model === 'mp_m_freemode_01' ? ' — ' + t.rule_male : ''} (${s.id})` })))
-                        : el('input', { type: 'text', placeholder: t.no_stash, oninput: (e) => { form.stash = e.target.value.trim(); } }))),
-            usable.length === 0 ? el('div', { class: 'pn-empty', text: t.empty_uniforms }) : null,
-            el('div', { class: 'pn-row' },
-                el('button', { class: 'btn btn-primary', text: t.issue_btn, disabled: usable.length === 0 || undefined, onclick: async () => {
-                    setMsg('pn-issue-msg', t.loading, true);
-                    const r = await call('issue', form.uniform, form.qty, form.stash);
-                    if (r.error) return setMsg('pn-issue-msg', r.message, false);
-                    setMsg('pn-issue-msg', t.issued.replace('%d', r.result.delivered).replace('%r', r.result.requested).replace('%f', r.result.failed), r.result.failed === 0);
-                } })),
-            el('div', { class: 'pn-msg', id: 'pn-issue-msg' })));
     }
 
     // ------------------------------------------------------------------ Bolsas
@@ -563,7 +530,7 @@
 
     // ------------------------------------------------------------------ Última organização e aba (D219)
 
-    const TABS = ['uniforms', 'issue', 'bags', 'alerts', 'points', 'stashrules', 'audit', 'recovery'];
+    const TABS = ['uniforms', 'bags', 'alerts', 'points', 'stashrules', 'audit', 'recovery'];
 
     function initialState(data, locale, last) {
         const orgs = data.orgs || [];

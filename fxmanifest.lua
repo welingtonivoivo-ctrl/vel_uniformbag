@@ -25,6 +25,7 @@ server_scripts {
     'server/locks.lua',
     'server/ground.lua',
     'server/stashes.lua',
+    'server/supply.lua',
     'server/issue.lua',
     'server/alerts.lua',
     'server/change.lua',

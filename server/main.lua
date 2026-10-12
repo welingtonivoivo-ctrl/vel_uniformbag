@@ -104,6 +104,8 @@ CreateThread(function()
         SetTimeout(60000, function()
             local ok, n = pcall(Bags.ResyncStashes)
             if ok and n > 0 then log(L('startup.relabel', n)) end
+            Supply.SyncAll()
+            log(L('startup.supply'))
         end)
     end
     Permissions.RegisterWithQadmin()

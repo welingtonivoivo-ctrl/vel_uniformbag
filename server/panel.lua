@@ -113,7 +113,7 @@ lib.callback.register('vel_uniformbag:panel:uniforms', function(src, org)
         local grades = MySQL.query.await('SELECT `grade` FROM `sub_uniform_grades` WHERE `uniform_id` = ? ORDER BY `grade`', { u.id }) or {}
         u.grades = {}
         for _, g in ipairs(grades) do u.grades[#u.grades + 1] = g.grade end
-        u.bags = tonumber(MySQL.scalar.await("SELECT COALESCE(SUM(`delivered`), 0) FROM `sub_issue_batches` WHERE `uniform_id` = ?", { u.id })) or 0
+        u.bags = tonumber(MySQL.scalar.await("SELECT COUNT(*) FROM `sub_bags` WHERE `uniform_id` = ? AND `status` <> 'falha_emissao'", { u.id })) or 0
     end
     -- Modelo atual de quem abriu o painel: mostra qual versão pode ser gravada agora.
     local model = GetEntityModel(GetPlayerPed(src)) & 0xFFFFFFFF
@@ -168,11 +168,13 @@ lib.callback.register('vel_uniformbag:panel:saveUniform', function(src, form)
         end
         if not MySQL.transaction.await(queries) then return { error = 'block.save_failed' } end
         Utils.Audit('admin', 'uniforme_alterado', { src = src, org = form.org, uniformId = id, data = { nome = name, modo = mode, graduacoes = grades, min = gmin, max = gmax, ativo = form.active ~= false } })
+        Supply.SyncOrgAsync(form.org)
         return { ok = true, id = id }
     end
 
     local newId, createErr = Uniforms.Create(src, { org = form.org, name = name, mode = mode, grades = grades, min = gmin, max = gmax })
     if not newId then return { error = createErr } end
+    Supply.SyncOrgAsync(form.org)
     return { ok = true, id = newId }
 end)
 
@@ -192,6 +194,7 @@ lib.callback.register('vel_uniformbag:panel:captureVariant', function(src, unifo
     end
 
     Uniforms.SaveVariant(src, uniform.id, clothing)
+    Supply.SyncOrgAsync(uniform.org)
     return { ok = true, model = clothing.model }
 end)
 
@@ -202,22 +205,28 @@ lib.callback.register('vel_uniformbag:panel:removeVariant', function(src, unifor
     if not ok then return { error = err } end
     MySQL.update.await('DELETE FROM `sub_uniform_variants` WHERE `uniform_id` = ? AND `model` = ?', { uniform.id, tostring(model) })
     Utils.Audit('admin', 'versao_uniforme_removida', { src = src, org = uniform.org, uniformId = uniform.id, data = { model = model } })
+    Supply.SyncOrgAsync(uniform.org)
     return { ok = true }
 end)
 
---- Excluir uniforme: só se nunca teve bolsa entregue (as entregues dependem dele). Leva junto as
---- tentativas de emissão que falharam, as versões e os cargos (D214).
+--- Excluir uniforme (D222): sai do baú na hora. Se nenhuma bolsa numerada dele existe, é apagado
+--- de vez (com lotes, versões e cargos); se já há bolsas em uso, fica desativado para elas
+--- continuarem rastreáveis.
 lib.callback.register('vel_uniformbag:panel:deleteUniform', function(src, uniformId)
     local uniform = Uniforms.Get(tonumber(uniformId))
     if not uniform then return { error = 'cmd.uniform_unknown' } end
     local ok, err = guard(src, uniform.org)
     if not ok then return { error = err } end
 
-    local delivered = tonumber(MySQL.scalar.await(
-        "SELECT COALESCE(SUM(`delivered`), 0) FROM `sub_issue_batches` WHERE `uniform_id` = ?", { uniform.id })) or 0
     local liveBags = tonumber(MySQL.scalar.await(
         "SELECT COUNT(*) FROM `sub_bags` WHERE `uniform_id` = ? AND `status` <> 'falha_emissao'", { uniform.id })) or 0
-    if delivered > 0 or liveBags > 0 then return { error = 'panel.delete_blocked' } end
+
+    if liveBags > 0 then
+        MySQL.update.await('UPDATE `sub_uniforms` SET `active` = 0 WHERE `id` = ?', { uniform.id })
+        Utils.Audit('admin', 'uniforme_desativado_exclusao', { src = src, org = uniform.org, uniformId = uniform.id, data = { uniforme = uniform.name, bolsas_em_uso = liveBags } })
+        Supply.SyncOrgAsync(uniform.org)
+        return { ok = true, deactivated = true }
+    end
 
     local done = MySQL.transaction.await({
         { query = "DELETE FROM `sub_bags` WHERE `uniform_id` = ? AND `status` = 'falha_emissao'", values = { uniform.id } },
@@ -228,6 +237,7 @@ lib.callback.register('vel_uniformbag:panel:deleteUniform', function(src, unifor
 
     Bags.StockUniforms[uniform.id] = nil
     Utils.Audit('admin', 'uniforme_excluido', { src = src, org = uniform.org, data = { uniforme = uniform.name, id = uniform.id } })
+    Supply.SyncOrgAsync(uniform.org)
     return { ok = true }
 end)
 
@@ -244,24 +254,9 @@ end)
 ------------------------------------------------------------------------------------------------
 
 --- Baús da organização registrados no mri_Qbossmenu (D26); a configuração manual vem na parte 2.
---- Baús da organização cadastrados no mri_Qbossmenu.
+--- Baús da organização cadastrados no mri_Qbossmenu (server/supply.lua).
 local function orgStashes(org)
-    local list = {}
-    if GetResourceState('mri_Qbossmenu') == 'started' then
-        local ok, def = pcall(function() return exports.mri_Qbossmenu:GetManagedDefinition(org, 'job') end)
-        if ok and type(def) == 'table' then
-            local stashes = def.stashes or (def.definition and def.definition.stashes) or {}
-            for _, s in ipairs(stashes) do
-                if type(s) == 'table' and type(s.id) == 'string' then
-                    local c = type(s.coords) == 'table' and s.coords or nil
-                    local x, y, z = c and tonumber(c.x), c and tonumber(c.y), c and tonumber(c.z)
-                    local hasCoords = x and y and z and not (x == 0 and y == 0 and z == 0)
-                    list[#list + 1] = { id = s.id, label = s.label or s.id, coords = hasCoords and { x = x, y = y, z = z } or nil }
-                end
-            end
-        end
-    end
-    return list
+    return Supply.OrgStashes(org)
 end
 
 lib.callback.register('vel_uniformbag:panel:stashes', function(src, org)
@@ -313,6 +308,7 @@ lib.callback.register('vel_uniformbag:panel:setStashRule', function(src, org, st
     for _, s in ipairs(orgStashes(org)) do if s.id == stashId then found = s end end
     if not found then return { error = 'cmd.stash_invalid' } end
     StashRules.Set(stashId, model)
+    Supply.SyncOrgAsync(org)
     Utils.Audit('admin', 'regra_bau', { src = src, org = org, data = { bau = stashId, modelo = StashRules.Get(stashId) or 'todos' } })
     return { ok = true }
 end)

@@ -82,8 +82,14 @@ end
 function Bags.Materialize(meta, citizenid)
     local uniform = Uniforms.Get(meta.uniformId)
     if not uniform or uniform.org ~= meta.org then return nil end
-    local batch = MySQL.single.await(
-        "SELECT `id`, `requested_by` FROM `sub_issue_batches` WHERE `uniform_id` = ? AND `delivered` > 0 ORDER BY `id` DESC LIMIT 1", { uniform.id })
+    local sql = "SELECT `id`, `requested_by` FROM `sub_issue_batches` WHERE `uniform_id` = ? AND `status` <> 'falhou' ORDER BY `id` DESC LIMIT 1"
+    local batch = MySQL.single.await(sql, { uniform.id })
+    if not batch then
+        -- Abastecimento infinito (D222): um lote técnico por uniforme liga as bolsas ao registro.
+        MySQL.insert.await([[INSERT INTO `sub_issue_batches` (`idempotency_key`, `org`, `uniform_id`, `stash_id`, `requested`, `delivered`, `status`, `requested_by`, `finished_at`)
+            VALUES (?, ?, ?, 'abastecimento', 0, 0, 'concluido', 'sistema', NOW())]], { Utils.Uuid(), uniform.org, uniform.id })
+        batch = MySQL.single.await(sql, { uniform.id })
+    end
     local bagId = batch and Bags.NewId()
     if not bagId then return nil end
     MySQL.insert.await(
@@ -323,10 +329,12 @@ local function onSwapItems(payload)
             return false
         end
         if not chargeWithdrawal(payload.source, meta, payload.fromInventory) then return false end
+        if meta.stock then local org = meta.org SetTimeout(300, function() Supply.SyncOrg(org) end) end
     elseif payload.fromType == 'player' and payload.toType == 'stash' and isUniformStash(payload.toInventory, meta.org) then
         local player = exports.qbx_core:GetPlayer(payload.source)
         local cid = player and player.PlayerData.citizenid
         if cid then SetResourceKvp(FREE .. cid, '1') end
+        if meta.stock then local org = meta.org SetTimeout(300, function() Supply.SyncOrg(org) end) end
     end
 
     local bagId = meta.bagId
