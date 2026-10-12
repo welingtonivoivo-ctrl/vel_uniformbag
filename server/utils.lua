@@ -109,5 +109,14 @@ function Utils.Audit(category, action, fields)
 
     if not ok then
         Utils.Error(L('audit.failed', category, action, tostring(err)))
+        return
+    end
+
+    -- Discord (D70–D78): só depois de gravado no banco; falha no envio não afeta nada.
+    if Discord then
+        pcall(Discord.Enqueue, err, category, action, {
+            org = fields.org, bagId = fields.bagId, uniformId = fields.uniformId,
+            actorCid = actorCid, actorName = actorName, coords = coords, data = fields.data,
+        })
     end
 end

@@ -1,6 +1,7 @@
 -- Painel de gestão no cliente: abre a NUI e repassa as chamadas ao servidor (que decide tudo).
 
 local panelOpen = false
+local embedded = false -- true quando o painel está dentro da aba Plugins do mri_Qadmin
 
 -- Só estas funções do servidor podem ser chamadas pela NUI do painel.
 local ALLOWED = {
@@ -8,6 +9,7 @@ local ALLOWED = {
     stashes = true, issue = true, bags = true, bagHistory = true,
     alertSettings = true, saveAlertSettings = true, audit = true,
     findCharacter = true, recoverySources = true, createRecovery = true, cancelRecovery = true,
+    points = true, addPoint = true, togglePoint = true,
 }
 
 local function panelLocale()
@@ -24,6 +26,8 @@ local function panelLocale()
         'alert_code', 'item_image', 'item_image_hint', 'default_stash', 'psdispatch_off', 'category', 'actor',
         'previous', 'next', 'when', 'action', 'details', 'find_char', 'find_hint', 'sources', 'reason',
         'reason_hint', 'register', 'pending', 'cancel_rec', 'no_results', 'recovery_note', 'choose_source',
+        'tab_points', 'points_hint', 'point_label', 'point_placeholder', 'point_add', 'points_staff_only',
+        'activate', 'deactivate', 'discord', 'webhook_on', 'webhook_off', 'webhook_org', 'webhook_admin', 'discord_hint',
     }
     local t = {}
     for _, k in ipairs(keys) do t[k] = L('panel.' .. k) end
@@ -31,7 +35,8 @@ local function panelLocale()
 end
 
 RegisterNetEvent('street_uniformbag:client:panelOpen', function(data)
-    if panelOpen or Bag.IsOpen() then return end
+    if (panelOpen and not embedded) or Bag.IsOpen() then return end
+    embedded = false
     panelOpen = true
     SendNUIMessage({ action = 'panelOpen', data = data, locale = panelLocale() })
     SetNuiFocus(true, true)
@@ -45,7 +50,24 @@ end
 
 RegisterNUICallback('panelClose', function(_, cb)
     cb(true)
+    if embedded then
+        embedded = false
+        panelOpen = false
+        pcall(function() exports.mri_Qadmin:ClosePlugin() end)
+        return
+    end
     closePanel()
+end)
+
+-- Página embutida no mri_Qadmin pede os dados iniciais (o mri_Qadmin cuida do foco da tela).
+RegisterNUICallback('panelBootstrap', function(_, cb)
+    local data = lib.callback.await('street_uniformbag:panel:bootstrap', false)
+    if not data or data.error then
+        return cb({ error = data and data.error or 'panel.no_access', message = L(data and data.error or 'panel.no_access') })
+    end
+    embedded = true
+    panelOpen = true
+    cb({ data = data, locale = panelLocale() })
 end)
 
 RegisterNUICallback('panel', function(body, cb)
@@ -63,10 +85,16 @@ RegisterNUICallback('openStore', function(_, cb)
     cb(true)
     if not lib.callback.await('street_uniformbag:panel:canOpenStore', false) then return end
 
-    SetNuiFocus(false, false)
-    SendNUIMessage({ action = 'panelHide' })
+    local wasEmbedded = embedded
+    if wasEmbedded then
+        pcall(function() exports.mri_Qadmin:ClosePlugin() end)
+        Wait(300)
+    else
+        SetNuiFocus(false, false)
+        SendNUIMessage({ action = 'panelHide' })
+    end
 
-    local all = { masks = true, upperBody = true, lowerBody = true, bags = true, shoes = true,
+    local all ={ masks = true, upperBody = true, lowerBody = true, bags = true, shoes = true,
         scarfAndChains = true, bodyArmor = true, shirts = true, decals = true, jackets = true }
     local props = { hats = true, glasses = true, ear = true, watches = true, bracelets = true }
 
@@ -74,7 +102,9 @@ RegisterNUICallback('openStore', function(_, cb)
         if appearance then
             TriggerServerEvent('illenium-appearance:server:saveAppearance', appearance)
         end
-        if panelOpen then
+        if wasEmbedded then
+            pcall(function() exports.mri_Qadmin:OpenPlugin('street_uniformbag') end)
+        elseif panelOpen then
             SendNUIMessage({ action = 'panelShow' })
             SetNuiFocus(true, true)
         end

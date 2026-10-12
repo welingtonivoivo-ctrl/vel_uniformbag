@@ -100,6 +100,25 @@ local function registerWithQadmin()
     else
         log('^1' .. L('perm.register_failed', tostring(err)) .. '^7')
     end
+
+    -- Aba "Bolsas de Uniformes" em Plugins do mri_Qadmin (D88): carrega web/plugin.html deste recurso.
+    ok, err = pcall(function()
+        exports.mri_Qadmin:RegisterPlugin({
+            id = 'street_uniformbag',
+            label = L('perm.category_label'),
+            icon = 'shirt',
+            resource = GetCurrentResourceName(),
+            htmlPath = 'web/plugin.html',
+            requiredPerms = { PERM_MANAGE },
+            permDefs = { { id = PERM_MANAGE, label = L('perm.manage_label'), desc = L('perm.manage_desc') } },
+            description = L('perm.manage_desc'),
+        })
+    end)
+    if ok then
+        log(L('perm.plugin_registered'))
+    else
+        log('^1' .. L('perm.register_failed', tostring(err)) .. '^7')
+    end
 end
 
 Permissions.RegisterWithQadmin = registerWithQadmin

@@ -30,6 +30,8 @@ server_scripts {
     'server/commands.lua',
     'server/panel.lua',
     'server/recovery.lua',
+    'server/points.lua',
+    'server/discord.lua',
     'server/main.lua',
 }
 
@@ -41,6 +43,7 @@ client_scripts {
     'client/panel.lua',
     'client/alerts.lua',
     'client/recovery.lua',
+    'client/points.lua',
 }
 
 ui_page 'web/index.html'
@@ -51,6 +54,7 @@ files {
     'web/app.js',
     'web/panel.css',
     'web/panel.js',
+    'web/plugin.html',
 }
 
 -- Obrigatórias (TRD §1). Opcionais (mri_Qadmin, ps-dispatch, mri_Qbossmenu,

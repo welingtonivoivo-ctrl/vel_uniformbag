@@ -4,6 +4,12 @@
 
 Panel = {}
 
+-- Categorias de auditoria (05-BACKEND §2.10), usadas no filtro e na escolha de logs do Discord.
+local AUDIT_CATEGORIES = {
+    emissao = true, retirada = true, transferencia = true, devolucao = true, troca = true, uso_indevido = true,
+    mudanca_cargo = true, pendente_verificacao = true, admin = true, recuperacao = true, duplicacao = true, sistema = true,
+}
+
 local function profileFor(src, org)
     return Permissions.GetProfile(src, org)
 end
@@ -45,22 +51,40 @@ end
 -- Abertura
 ------------------------------------------------------------------------------------------------
 
-function Panel.Open(src)
-    if not Database.Ready then
-        return TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = L('block.unavailable') })
-    end
+--- Dados iniciais do painel. `onlyOrg` limita à organização de um ponto da sede.
+function Panel.Bootstrap(src, onlyOrg)
+    if not Database.Ready then return nil, 'block.unavailable' end
     local orgs = orgsFor(src)
-    if #orgs == 0 then
-        return TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = L('panel.no_access') })
+    if onlyOrg then
+        local filtered = {}
+        for _, o in ipairs(orgs) do
+            if o.name == onlyOrg then filtered[1] = o end
+        end
+        orgs = filtered
     end
-    TriggerClientEvent('street_uniformbag:client:panelOpen', src, {
+    if #orgs == 0 then return nil, 'panel.no_access' end
+    return {
         admin = isAdmin(src),
         orgs = orgs,
         color = GetConvar('mri:color', Config.DefaultColor),
         maxBatch = Config.MaxBagsPerBatch,
         slots = Config.Slots,
-    })
+    }
 end
+
+function Panel.Open(src, onlyOrg)
+    local data, err = Panel.Bootstrap(src, onlyOrg)
+    if not data then
+        return TriggerClientEvent('ox_lib:notify', src, { type = 'error', description = L(err) })
+    end
+    TriggerClientEvent('street_uniformbag:client:panelOpen', src, data)
+end
+
+-- Versão embutida na aba Plugins do mri_Qadmin: a página pede os dados iniciais.
+lib.callback.register('street_uniformbag:panel:bootstrap', function(src)
+    local data, err = Panel.Bootstrap(src)
+    return data or { error = err }
+end)
 
 -- Comando da staff (D205). Só staff com a permissão ou ACE de emergência.
 RegisterCommand('adminoutfit', function(src)
@@ -278,7 +302,18 @@ lib.callback.register('street_uniformbag:panel:alertSettings', function(src, org
     for t in pairs(types) do typeList[#typeList + 1] = t end
     table.sort(typeList)
 
-    return { settings = Alerts.GetSettings(org), jobTypes = typeList, jobNames = names, psdispatch = GetResourceState('ps-dispatch') == 'started' }
+    local settings = Alerts.GetSettings(org)
+    if not settings.logCategories then
+        settings.logCategories = {}
+        for c in pairs(Discord.Essential) do settings.logCategories[#settings.logCategories + 1] = c end
+    end
+
+    -- Só a situação do webhook (configurado ou não), nunca o endereço (D76).
+    return {
+        settings = settings, jobTypes = typeList, jobNames = names,
+        psdispatch = GetResourceState('ps-dispatch') == 'started',
+        webhookOrg = Discord.HasWebhook(org), webhookAdmin = Discord.HasWebhook('admin'),
+    }
 end)
 
 lib.callback.register('street_uniformbag:panel:saveAlertSettings', function(src, org, form)
@@ -317,6 +352,7 @@ lib.callback.register('street_uniformbag:panel:saveAlertSettings', function(src,
         code = code ~= '' and code or Config.Dispatch.code,
         itemImage = image,
         defaultStash = stash,
+        logCategories = filterList(form.logCategories, function(v) return AUDIT_CATEGORIES[v] == true end),
     })
     return { ok = true }
 end)
@@ -324,11 +360,6 @@ end)
 ------------------------------------------------------------------------------------------------
 -- Auditoria (D71, D72, D161): consulta paginada; líder só da própria organização.
 ------------------------------------------------------------------------------------------------
-
-local AUDIT_CATEGORIES = {
-    emissao = true, retirada = true, transferencia = true, devolucao = true, troca = true, uso_indevido = true,
-    mudanca_cargo = true, pendente_verificacao = true, admin = true, recuperacao = true, duplicacao = true, sistema = true,
-}
 
 lib.callback.register('street_uniformbag:panel:audit', function(src, org, filter)
     local ok, err = guard(src, org)

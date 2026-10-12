@@ -69,7 +69,7 @@
                         el('button', { class: 'btn btn-secondary', text: t.open_store, title: t.store_hint, onclick: () => nui('openStore') }),
                         el('button', { class: 'btn btn-secondary', text: t.close, onclick: close })),
                     el('div', { class: 'pn-tabs' },
-                        [['uniforms', t.tab_uniforms], ['issue', t.tab_issue], ['bags', t.tab_bags], ['alerts', t.tab_alerts], ['audit', t.tab_audit],
+                        [['uniforms', t.tab_uniforms], ['issue', t.tab_issue], ['bags', t.tab_bags], ['alerts', t.tab_alerts], ['points', t.tab_points], ['audit', t.tab_audit],
                             P.data.admin ? ['recovery', t.tab_recovery] : null].filter(Boolean).map(([id, label]) =>
                             el('button', { class: `pn-tab ${P.tab === id ? 'active' : ''}`, text: label, onclick: () => { P.tab = id; shell(); load(); } }))),
                     el('div', { class: 'pn-body', id: 'pn-body' }))));
@@ -77,6 +77,12 @@
     }
 
     function close() {
+        if (EMBED) {
+            // Dentro do mri_Qadmin: pede para ele fechar o painel (protocolo de plugin).
+            window.parent.postMessage({ type: 'mri-plugin/request-close' }, '*');
+            nui('panelClose');
+            return;
+        }
         document.getElementById('panel-root').replaceChildren();
         P = null;
         nui('panelClose');
@@ -90,7 +96,42 @@
         if (P.tab === 'alerts') return loadAlerts();
         if (P.tab === 'audit') return loadAudit();
         if (P.tab === 'recovery') return loadRecovery();
+        if (P.tab === 'points') return loadPoints();
         return loadBags();
+    }
+
+    // ------------------------------------------------------------------ Pontos nas sedes (D89–D93)
+
+    async function loadPoints() {
+        const t = P.t;
+        const res = await call('points', P.org);
+        if (!P) return;
+        if (res.error) return document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-msg err', text: res.message }));
+        const form = { label: '' };
+
+        document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-main' },
+            el('div', { class: 'pn-item-sub', text: t.points_hint }),
+            res.canEdit ? el('div', { class: 'pn-row' },
+                el('label', { class: 'field' }, t.point_label, el('input', { type: 'text', maxlength: 80, placeholder: t.point_placeholder, oninput: (e) => { form.label = e.target.value; } })),
+                el('button', { class: 'btn btn-primary', text: t.point_add, onclick: async () => {
+                    const r = await call('addPoint', P.org, form.label);
+                    if (r.error) return setMsg('pn-point-msg', r.message, false);
+                    setMsg('pn-point-msg', t.saved, true);
+                    loadPoints();
+                } })) : el('div', { class: 'pn-item-sub', text: t.points_staff_only }),
+            el('div', { class: 'pn-msg', id: 'pn-point-msg' }),
+            (res.points || []).length === 0 ? el('div', { class: 'pn-empty', text: t.no_results }) :
+                el('table', { class: 'pn-table' },
+                    el('thead', {}, el('tr', {}, [t.point_label, t.location, t.status, ''].map((h) => el('th', { text: h })))),
+                    el('tbody', {}, res.points.map((p) => el('tr', {},
+                        el('td', { text: p.label }),
+                        el('td', { class: 'mono', text: `${Number(p.x).toFixed(1)}, ${Number(p.y).toFixed(1)}, ${Number(p.z).toFixed(1)}` }),
+                        el('td', { text: p.active ? t.active : t.inactive }),
+                        el('td', {}, res.canEdit ? el('button', { class: `btn btn-sm ${p.active ? 'btn-danger' : 'btn-secondary'}`, text: p.active ? t.deactivate : t.activate, onclick: async () => {
+                            const r = await call('togglePoint', p.id, !p.active);
+                            if (r.error) return setMsg('pn-point-msg', r.message, false);
+                            loadPoints();
+                        } }) : null)))))));
     }
 
     // ------------------------------------------------------------------ Alertas e logs
@@ -112,10 +153,13 @@
 
         const typesBox = el('div');
         const namesBox = el('div');
+        const logsBox = el('div');
         const drawLists = () => {
             typesBox.replaceChildren(checkList(res.jobTypes.map((x) => [x, x]), s.jobTypes, (v) => { s.jobTypes = v; drawLists(); }));
             namesBox.replaceChildren(checkList(res.jobNames.map((j) => [j.name, `${j.label} (${j.name})`]), s.jobNames, (v) => { s.jobNames = v; drawLists(); }));
+            logsBox.replaceChildren(checkList(CATEGORIES.map((c) => [c, c]), s.logCategories || [], (v) => { s.logCategories = v; drawLists(); }));
         };
+        const hook = (on) => el('span', { class: `badge ${on ? '' : 'badge-warn'}`, text: on ? t.webhook_on : t.webhook_off });
         drawLists();
 
         document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-main' },
@@ -134,6 +178,10 @@
                 el('label', { class: 'field' }, t.item_image, el('input', { type: 'text', maxlength: 60, value: s.itemImage, placeholder: 'uniform_bag', title: t.item_image_hint, oninput: (e) => { s.itemImage = e.target.value.trim(); } })),
                 el('label', { class: 'field' }, t.default_stash, el('input', { type: 'text', maxlength: 80, value: s.defaultStash, oninput: (e) => { s.defaultStash = e.target.value.trim(); } }))),
             el('div', { class: 'pn-item-sub', text: t.item_image_hint }),
+            el('div', { class: 'pn-section' }, el('h3', { text: t.discord }),
+                el('div', { class: 'pn-item-sub' }, `${t.webhook_org}: `, hook(res.webhookOrg), ' · ', `${t.webhook_admin}: `, hook(res.webhookAdmin)),
+                el('div', { class: 'pn-item-sub', text: t.discord_hint.replace('%s', P.org) }),
+                logsBox),
             el('div', { class: 'pn-row' }, el('button', { class: 'btn btn-primary', text: t.save, onclick: async () => {
                 const r = await call('saveAlertSettings', P.org, s);
                 setMsg('pn-alert-msg', r.error ? r.message : t.saved, !r.error);
@@ -466,6 +514,34 @@
     });
 
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && P) close();
+        if (e.key === 'Escape' && P && !EMBED) close();
     });
+
+    // Embutido no mri_Qadmin (web/plugin.html): a própria página pede os dados iniciais.
+    const EMBED = document.body && document.body.dataset.embed === '1';
+    if (EMBED) {
+        // Protocolo de plugin do mri_Qadmin: avisa que a página está pronta; ele responde com
+        // mri-plugin/init (cor do painel). Reaberturas chegam como mri-plugin/navigate.
+        window.addEventListener('message', (event) => {
+            const msg = event.data || {};
+            if ((msg.type === 'mri-plugin/init' || msg.type === 'mri-plugin/theme-changed')
+                && /^#[0-9a-fA-F]{6}$/.test(msg.accentColor || '')) {
+                document.documentElement.style.setProperty('--color-primary', msg.accentColor);
+            } else if (msg.type === 'mri-plugin/navigate' && P) {
+                load();
+            }
+        });
+        window.parent.postMessage({ type: 'mri-plugin/ready' }, '*');
+
+        nui('panelBootstrap').then((res) => {
+            if (!res || res.error) {
+                document.getElementById('panel-root').replaceChildren(el('div', { class: 'pn-col pn-msg err', text: (res && res.message) || 'Sem acesso.' }));
+                return;
+            }
+            P = { data: res.data, t: res.locale, org: res.data.orgs[0]?.name, tab: 'uniforms', uniforms: [], edit: null };
+            if (/^#[0-9a-fA-F]{6}$/.test(res.data.color || '')) document.documentElement.style.setProperty('--color-primary', res.data.color);
+            shell();
+            load();
+        });
+    }
 })();

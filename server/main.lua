@@ -93,6 +93,7 @@ CreateThread(function()
         Change.RevertInterrupted()
         log(L('startup.known_bags', Bags.LoadKnown()))
         log(L('startup.ground', Ground.Load()))
+        log(L('startup.points', Points.Load()))
         Bags.RegisterHooks()
     end
     Permissions.RegisterWithQadmin()

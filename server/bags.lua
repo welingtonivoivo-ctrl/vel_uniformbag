@@ -140,10 +140,12 @@ local function onCreateItem(payload)
     meta.description = L('item.invalid_desc')
     meta.image = Config.DefaultItemImage
 
-    Utils.Audit('duplicacao', 'item_criado_fora_da_emissao', {
-        bagId = type(bagId) == 'string' and bagId:sub(1, 12) or nil,
-        data = { recurso = tostring(payload.resource), inventario = tostring(payload.inventoryId) },
-    })
+    -- Hooks do ox_inventory são síncronos: a auditoria (que espera o banco) roda à parte.
+    local auditBag = type(bagId) == 'string' and bagId:sub(1, 12) or nil
+    local auditData = { recurso = tostring(payload.resource), inventario = tostring(payload.inventoryId) }
+    CreateThread(function()
+        Utils.Audit('duplicacao', 'item_criado_fora_da_emissao', { bagId = auditBag, data = auditData })
+    end)
     return meta
 end
 

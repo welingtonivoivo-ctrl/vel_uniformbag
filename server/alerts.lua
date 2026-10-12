@@ -158,6 +158,7 @@ function Alerts.GetSettings(org)
         code = row.alert_code or Config.Dispatch.code,
         itemImage = row.item_image or '',
         defaultStash = row.default_stash_id or '',
+        logCategories = row.log_categories and decodeList(row.log_categories) or nil,
     }
 end
 
@@ -166,16 +167,16 @@ function Alerts.SaveSettings(src, org, s)
     local data = Utils.GetPlayerData(src)
     MySQL.query.await(
         [[INSERT INTO `sub_org_settings` (`org`, `alert_enabled`, `alert_mode`, `alert_job_types`, `alert_job_names`, `alert_onduty_only`,
-            `alert_blip_seconds`, `alert_code`, `item_image`, `default_stash_id`, `updated_by`, `updated_at`)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            `alert_blip_seconds`, `alert_code`, `item_image`, `default_stash_id`, `log_categories`, `updated_by`, `updated_at`)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
           ON DUPLICATE KEY UPDATE `alert_enabled` = VALUES(`alert_enabled`), `alert_mode` = VALUES(`alert_mode`),
             `alert_job_types` = VALUES(`alert_job_types`), `alert_job_names` = VALUES(`alert_job_names`),
             `alert_onduty_only` = VALUES(`alert_onduty_only`), `alert_blip_seconds` = VALUES(`alert_blip_seconds`),
             `alert_code` = VALUES(`alert_code`), `item_image` = VALUES(`item_image`), `default_stash_id` = VALUES(`default_stash_id`),
-            `updated_by` = VALUES(`updated_by`), `updated_at` = NOW()]],
+            `log_categories` = VALUES(`log_categories`), `updated_by` = VALUES(`updated_by`), `updated_at` = NOW()]],
         { org, s.enabled and 1 or 0, s.mode, json.encode(s.jobTypes), json.encode(s.jobNames), s.onDutyOnly and 1 or 0,
           s.blipSeconds, s.code, s.itemImage ~= '' and s.itemImage or nil, s.defaultStash ~= '' and s.defaultStash or nil,
-          data and data.citizenid or '?' })
+          json.encode(s.logCategories or {}), data and data.citizenid or '?' })
     Utils.Audit('admin', 'configuracao_alterada', { src = src, org = org, data = s })
 end
 
