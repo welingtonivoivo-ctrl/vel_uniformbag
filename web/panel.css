@@ -122,3 +122,10 @@
 .pn-embed { background: var(--color-bg); overflow: hidden; }
 .pn-embed .pn-backdrop { background: none; position: static; display: block; }
 .pn-embed .pn { width: 100vw; height: 100vh; border: none; border-radius: 0; }
+
+/* Versão feminina em rosa, masculina no roxo do painel: evita gravar na versão errada (D218). */
+.pn-variant-card.female { --variant-color: #e0458f; }
+.pn-variant-card.female.mine { border-color: var(--variant-color); }
+.pn-variant-card.female b { color: var(--variant-color); }
+.pn-variant-card.female .btn-primary { background: var(--variant-color); border-color: var(--variant-color); }
+.pn-variant-card.female .badge:not(.badge-warn) { background: rgba(224, 69, 143, .18); color: var(--variant-color); }

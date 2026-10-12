@@ -420,7 +420,7 @@
             el('div', { class: 'pn-variants' }, MODELS.map(([model, key]) => {
                 const has = f.models.includes(model);
                 const mine = P.myModel === model;
-                return el('div', { class: `pn-variant-card ${mine ? 'mine' : ''}` },
+                return el('div', { class: `pn-variant-card ${key} ${mine ? 'mine' : ''}` },
                     el('div', {}, el('b', { text: t[key] }), ' ',
                         el('span', { class: `badge ${has ? '' : 'badge-warn'}`, text: has ? '✓' : t.missing })),
                     el('div', { class: 'pn-item-sub', text: mine ? t.you_are : (key === 'female' ? t.need_female : t.need_male) }),
