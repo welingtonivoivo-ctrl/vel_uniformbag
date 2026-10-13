@@ -95,6 +95,18 @@ RegisterCommand('adminoutfit', function(src)
     Panel.Open(src)
 end, false)
 
+-- Sugestão do /adminoutfit no chat, só para quem pode usar.
+local function suggestAdminCommand(src)
+    if isAdmin(src) then
+        TriggerClientEvent('chat:addSuggestion', src, '/adminoutfit', 'Painel das bolsas de uniforme (staff)')
+    end
+end
+AddEventHandler('QBCore:Server:OnPlayerLoaded', function() local src = source; SetTimeout(2000, function() suggestAdminCommand(src) end) end)
+CreateThread(function()
+    Wait(3000)
+    for _, id in ipairs(GetPlayers()) do suggestAdminCommand(tonumber(id)) end
+end)
+
 ------------------------------------------------------------------------------------------------
 -- Uniformes
 ------------------------------------------------------------------------------------------------

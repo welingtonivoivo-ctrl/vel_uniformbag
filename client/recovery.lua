@@ -49,6 +49,12 @@ end
 
 RegisterCommand(Config.RecoveryCommand, function() CreateThread(function() offer(false) end) end, false)
 
+-- Sugestão no chat (aparece ao digitar "/mi...").
+CreateThread(function()
+    Wait(2000)
+    TriggerEvent('chat:addSuggestion', '/' .. Config.RecoveryCommand, 'Restaurar a roupa que a equipe devolveu para você (bolsa de uniforme)')
+end)
+
 RegisterNetEvent('vel_uniformbag:client:recoveryPending', function()
     CreateThread(function() offer(true) end)
 end)
