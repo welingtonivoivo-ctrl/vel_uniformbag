@@ -29,15 +29,18 @@ local function build(list)
                 thickness = (d.height or 4.0) * 2,
                 debug = false,
                 onEnter = function()
-                    if not memberOf(d.org) then return end
                     insideId = d.id
-                    lib.showTextUI(L('target.ustash_key', d.label), { position = 'left-center' })
+                    if memberOf(d.org) then
+                        lib.showTextUI(L('target.ustash_key', d.label), { position = 'left-center', icon = 'shirt' })
+                    else
+                        lib.showTextUI(L('target.ustash_members', d.label), { position = 'left-center', icon = 'lock' })
+                    end
                 end,
                 onExit = function()
                     if insideId == d.id then lib.hideTextUI() insideId = nil end
                 end,
                 inside = function()
-                    if insideId == d.id and IsControlJustReleased(0, 38) then
+                    if insideId == d.id and IsControlJustReleased(0, 38) and memberOf(d.org) then
                         exports.ox_inventory:openInventory('stash', d.id)
                     end
                 end,

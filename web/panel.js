@@ -199,6 +199,20 @@
                     loadStashRules();
                 }) : null)));
 
+        // Cantos salvos da área (D226), para conferir que a área foi gravada.
+        const areaRow = (s) => el('tr', { class: 'pn-area-row' }, el('td', { colspan: 3 },
+            s.hasArea
+                ? el('div', {},
+                    el('div', { class: 'pn-item-sub', text: `${t.ustash_corners}: ${s.points.length} · ${t.ustash_height}: ${Number(s.height || 0).toFixed(1)} m` }),
+                    el('table', { class: 'pn-table pn-coords' },
+                        el('thead', {}, el('tr', {}, ['#', 'X', 'Y', 'Z'].map((h) => el('th', { text: h })))),
+                        el('tbody', {}, s.points.map((p, i) => el('tr', {},
+                            el('td', { text: String(i + 1) }),
+                            el('td', { class: 'mono', text: Number(p.x).toFixed(2) }),
+                            el('td', { class: 'mono', text: Number(p.y).toFixed(2) }),
+                            el('td', { class: 'mono', text: Number(p.z).toFixed(2) }))))))
+                : el('div', { class: 'pn-msg err', text: t.ustash_no_area })));
+
         const form = { label: '', model: 'mp_f_freemode_01' };
         const createForm = res.canCreate ? el('div', { class: 'pn-section' },
             el('h3', { text: `${t.ustash_create_title} — ${org()?.label || P.org}` }),
@@ -223,7 +237,7 @@
                     el('h3', { text: `${g.label} (${g.org})` }),
                     (g.uniformStashes || []).length > 0 ? el('table', { class: 'pn-table' },
                         el('thead', {}, el('tr', {}, [t.ustash_title, t.ustash_type, ''].map((h) => el('th', { text: h })))),
-                        el('tbody', {}, g.uniformStashes.map((s) => ownRow(g, s)))) : null,
+                        el('tbody', {}, g.uniformStashes.flatMap((s) => [ownRow(g, s), areaRow(s)]))) : null,
                     g.stashes.length > 0 ? el('table', { class: 'pn-table' },
                         el('thead', {}, el('tr', {}, [t.stash_bossmenu, t.who_opens, ''].map((h) => el('th', { text: h })))),
                         el('tbody', {}, g.stashes.map((s) => row(g, s)))) : null))));

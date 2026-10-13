@@ -32,7 +32,7 @@ local function panelLocale()
         'confirm_delete', 'deleted', 'deleted_deactivated', 'tab_stashes', 'stash_rules_hint', 'who_opens', 'rule_all', 'rule_male', 'rule_female', 'clear_stash', 'clear_hint', 'confirm_clear', 'cleared', 'teleport',
         'ustash_create_title', 'ustash_hint', 'ustash_placeholder', 'ustash_type', 'ustash_create', 'ustash_title',
         'ustash_delete', 'stash_bossmenu', 'ustash_name', 'ustash_edit_area', 'ustash_draw_area', 'ustash_convert',
-        'ustash_convert_hint', 'ustash_convert_need_rule',
+        'ustash_convert_hint', 'ustash_convert_need_rule', 'ustash_corners', 'ustash_height', 'ustash_no_area',
     }
     local t = {}
     for _, k in ipairs(keys) do t[k] = L('panel.' .. k) end

@@ -148,3 +148,8 @@
 /* Baús de uniformes do recurso (D223): rosa para feminino, roxo para masculino. */
 .pn-ustash.female td:first-child { box-shadow: inset 4px 0 0 #e0458f; }
 .pn-ustash.male td:first-child { box-shadow: inset 4px 0 0 var(--color-primary); }
+
+/* Cantos salvos da área do baú (D226). */
+.pn-area-row td { padding-top: 0; background: transparent; }
+.pn-coords { margin: 6px 0 4px; max-width: 520px; }
+.pn-coords th, .pn-coords td { padding: 4px 8px; font-size: 12px; }

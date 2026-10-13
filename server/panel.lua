@@ -298,7 +298,7 @@ lib.callback.register('vel_uniformbag:panel:stashRules', function(src, org)
         end
         g.uniformStashes = g.uniformStashes or {}
         g.uniformStashes[#g.uniformStashes + 1] = { id = d.id, label = d.label, model = d.model, canTeleport = admin,
-            hasArea = type(d.points) == 'table' and #d.points >= 3 }
+            hasArea = type(d.points) == 'table' and #d.points >= 3, points = d.points, height = d.height }
     end
     table.sort(groups, function(a, b) return a.label:lower() < b.label:lower() end)
     return { groups = groups, canCreate = admin }
