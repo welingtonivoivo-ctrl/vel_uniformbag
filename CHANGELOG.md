@@ -16,6 +16,7 @@
 - Baús de uniformes com abastecimento infinito e automático por organização, cargo e sexo; aba Emissão removida (D222).
 - Baús de uniformes próprios, criados na aba "Baús" (nome, tipo e posição), com slots = cargos da organização (D223).
 - Área do baú de uniformes desenhada no chão, com acesso por E dentro da área (D224).
+- Editar a área dos baús de uniformes e converter baús do mri_Qbossmenu em baús de uniformes (D225).
 - Removida a marca da cidade (autor, descrição, README, tutorial e documentos). `#6400E6` passa a ser só a cor padrão quando o servidor não define `mri:color`.
 
 ### Atenção ao atualizar

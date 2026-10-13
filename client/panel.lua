@@ -31,7 +31,8 @@ local function panelLocale()
         'capture_male', 'capture_female', 'you_are', 'need_male', 'need_female', 'delete_uniform', 'delete_hint',
         'confirm_delete', 'deleted', 'deleted_deactivated', 'tab_stashes', 'stash_rules_hint', 'who_opens', 'rule_all', 'rule_male', 'rule_female', 'clear_stash', 'clear_hint', 'confirm_clear', 'cleared', 'teleport',
         'ustash_create_title', 'ustash_hint', 'ustash_placeholder', 'ustash_type', 'ustash_create', 'ustash_title',
-        'ustash_delete', 'stash_bossmenu', 'ustash_name',
+        'ustash_delete', 'stash_bossmenu', 'ustash_name', 'ustash_edit_area', 'ustash_draw_area', 'ustash_convert',
+        'ustash_convert_hint', 'ustash_convert_need_rule',
     }
     local t = {}
     for _, k in ipairs(keys) do t[k] = L('panel.' .. k) end
@@ -130,11 +131,16 @@ RegisterNUICallback('drawUStash', function(body, cb)
 
     local area = DrawStashArea()
     if area then
-        local res = lib.callback.await('vel_uniformbag:panel:createUStash', false, body.org, body.label, body.model, area)
+        local res
+        if body.editId then
+            res = lib.callback.await('vel_uniformbag:panel:editUStashArea', false, body.org, body.editId, area)
+        else
+            res = lib.callback.await('vel_uniformbag:panel:createUStash', false, body.org, body.label, body.model, area, body.fromStash)
+        end
         if type(res) == 'table' and res.error then
             lib.notify({ type = 'error', description = L(res.error) })
         else
-            lib.notify({ type = 'success', description = L('panel.ustash_created') })
+            lib.notify({ type = 'success', description = L(body.editId and 'panel.ustash_area_saved' or 'panel.ustash_created') })
         end
     end
 

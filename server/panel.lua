@@ -297,22 +297,45 @@ lib.callback.register('vel_uniformbag:panel:stashRules', function(src, org)
             groups[#groups + 1] = g
         end
         g.uniformStashes = g.uniformStashes or {}
-        g.uniformStashes[#g.uniformStashes + 1] = { id = d.id, label = d.label, model = d.model, canTeleport = admin }
+        g.uniformStashes[#g.uniformStashes + 1] = { id = d.id, label = d.label, model = d.model, canTeleport = admin,
+            hasArea = type(d.points) == 'table' and #d.points >= 3 }
     end
     table.sort(groups, function(a, b) return a.label:lower() < b.label:lower() end)
     return { groups = groups, canCreate = admin }
 end)
 
 --- Criar / excluir baú de uniformes do recurso (D223). Só staff/emergência.
-lib.callback.register('vel_uniformbag:panel:createUStash', function(src, org, label, model, area)
+lib.callback.register('vel_uniformbag:panel:createUStash', function(src, org, label, model, area, fromStash)
     local ok, err = guard(src, org)
     if not ok then return { error = err } end
     if not isAdmin(src) then return { error = 'cmd.no_permission' } end
     local d, cerr = UniformStash.Create(src, org, label, model, area)
     if not d then return { error = cerr } end
+    -- Conversão de um baú do mri_Qbossmenu (D225): ele volta a ser baú comum.
+    if type(fromStash) == 'string' then
+        for _, s in ipairs(orgStashes(org)) do
+            if s.id == fromStash then
+                StashRules.Set(fromStash, nil)
+                Bags.UniformStashes[fromStash] = true -- o abastecimento tira as bolsas infinitas de lá
+                Utils.Audit('admin', 'bau_convertido', { src = src, org = org, data = { de = fromStash, para = d.id } })
+            end
+        end
+    end
     Utils.Audit('admin', 'bau_uniformes_criado', { src = src, org = org, data = { bau = d.id, nome = d.label, modelo = d.model } })
     Supply.SyncOrgAsync(org)
     return { ok = true, id = d.id }
+end)
+
+lib.callback.register('vel_uniformbag:panel:editUStashArea', function(src, org, stashId, area)
+    local ok, err = guard(src, org)
+    if not ok then return { error = err } end
+    if not isAdmin(src) then return { error = 'cmd.no_permission' } end
+    local own = UniformStash.Get(stashId)
+    if not own or own.org ~= org then return { error = 'cmd.stash_invalid' } end
+    local done, derr = UniformStash.SetArea(src, stashId, area)
+    if not done then return { error = derr } end
+    Utils.Audit('admin', 'bau_area_editada', { src = src, org = org, data = { bau = stashId } })
+    return { ok = true }
 end)
 
 lib.callback.register('vel_uniformbag:panel:deleteUStash', function(src, org, stashId)

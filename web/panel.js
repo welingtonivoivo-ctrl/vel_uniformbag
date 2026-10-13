@@ -157,6 +157,10 @@
                     if (r.error) return setMsg('pn-stash-msg', r.message, false);
                     close();
                 } }) : null,
+                res.canCreate ? el('button', { class: 'btn btn-primary btn-sm', text: t.ustash_convert, title: t.ustash_convert_hint, onclick: () => {
+                    if (!s.model) return setMsg('pn-stash-msg', t.ustash_convert_need_rule, false);
+                    nui('drawUStash', { org: g.org, label: s.label, model: s.model, fromStash: s.id });
+                } }) : null,
                 el('button', { class: 'btn btn-danger btn-sm', text: t.clear_stash, title: t.clear_hint, onclick: async (e) => {
                     if (e.target.dataset.armed !== '1') {
                         e.target.dataset.armed = '1'; e.target.textContent = t.confirm_clear;
@@ -188,6 +192,7 @@
                     if (r.error) return setMsg('pn-stash-msg', r.message, false);
                     close();
                 } }) : null,
+                res.canCreate ? el('button', { class: 'btn btn-secondary btn-sm', text: s.hasArea ? t.ustash_edit_area : t.ustash_draw_area, onclick: () => nui('drawUStash', { org: g.org, editId: s.id }) }) : null,
                 res.canCreate ? confirmBtn('btn btn-danger btn-sm', t.ustash_delete, t.confirm_delete, async () => {
                     const r = await call('deleteUStash', g.org, s.id);
                     if (r.error) return setMsg('pn-stash-msg', r.message, false);

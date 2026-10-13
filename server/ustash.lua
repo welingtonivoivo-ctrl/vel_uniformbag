@@ -112,6 +112,18 @@ function UniformStash.Create(src, org, label, model, area)
     return d
 end
 
+--- Redesenha a área de um baú existente (D225).
+function UniformStash.SetArea(src, id, area)
+    local d = defs[id]
+    if not d then return false, 'cmd.stash_invalid' end
+    local pts, height, center = cleanArea(src, area)
+    if not pts then return false, 'panel.ustash_area' end
+    d.points, d.height, d.x, d.y, d.z = pts, height, center.x, center.y, center.z
+    save()
+    broadcast()
+    return true
+end
+
 --- Exclui o baú. Bolsas numeradas guardadas nele impedem a exclusão (não se perde rastreio).
 function UniformStash.Delete(id)
     local d = defs[id]
