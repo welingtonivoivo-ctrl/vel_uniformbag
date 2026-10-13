@@ -10,7 +10,7 @@ Recurso para servidores **FiveM / QBox** com bolsas físicas de uniforme. As org
 |---|---|
 | [`docs/MANUAL.md`](docs/MANUAL.md) | **Manual de uso** para staff e líderes (comece por aqui) |
 | [`docs/TUTORIAL-DISCORD.md`](docs/TUTORIAL-DISCORD.md) | Como ligar os logs no Discord |
-| `docs/00-DECISOES.md` | Registro de decisões (D1–D230) |
+| `docs/00-DECISOES.md` | Registro de decisões (D1–D231) |
 | `docs/01-PRD.md` | Requisitos do produto |
 | `docs/02-TRD.md` | Requisitos técnicos |
 | `docs/03-FLUXO.md` | Fluxos do sistema |

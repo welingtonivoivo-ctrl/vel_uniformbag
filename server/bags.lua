@@ -26,9 +26,26 @@ function Bags.ResolveImage(name)
     return Config.DefaultItemImage
 end
 
+--- Imagem automática pela área da organização (D231): tipo do emprego no QBox ou palavras do
+--- nome. Só vale quando a organização não escolheu uma imagem no painel (D174).
+local function autoImage(org)
+    local job = (exports.qbx_core:GetJobs() or {})[org] or {}
+    local kind = type(job.type) == 'string' and job.type:lower() or ''
+    local text = (tostring(org) .. ' ' .. tostring(job.label or '')):lower()
+    for _, rule in ipairs(Config.AutoItemImages or {}) do
+        if rule.types and rule.types[kind] then return rule.image end
+        for _, word in ipairs(rule.words or {}) do
+            if text:find(word, 1, true) then return rule.image end
+        end
+    end
+    return nil
+end
+
 function Bags.OrgImage(org)
     local row = MySQL.single.await('SELECT `item_image` FROM `sub_org_settings` WHERE `org` = ?', { org })
-    return Bags.ResolveImage(row and row.item_image)
+    local chosen = row and row.item_image
+    if type(chosen) ~= 'string' or chosen == '' then chosen = autoImage(org) end
+    return Bags.ResolveImage(chosen)
 end
 
 ------------------------------------------------------------------------------------------------

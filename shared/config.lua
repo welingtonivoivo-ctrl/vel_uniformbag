@@ -45,6 +45,14 @@ Config.PropModel = 'reh_prop_reh_bag_outfit_01a'
 -- Imagem padrão da bolsa (D174)
 Config.DefaultItemImage = 'uniform_bag'
 
+-- Cor da bolsa automática por área (D231), quando a organização não escolheu imagem no painel.
+-- Confere o tipo do emprego no QBox (job.type) e, se não bater, palavras no nome/rótulo.
+Config.AutoItemImages = {
+    { image = 'uniform_bag_policia',  types = { leo = true, police = true }, words = { 'police', 'policia', 'polícia', 'pm', 'pmesp', 'sheriff', 'bcso', 'lspd', 'rota', 'civil', 'federal', 'prf' } },
+    { image = 'uniform_bag_hospital', types = { ems = true, medical = true }, words = { 'ambulance', 'hospital', 'samu', 'medic', 'médic', 'paramedic' } },
+    { image = 'uniform_bag_mecanica', types = { mechanic = true }, words = { 'mechanic', 'mecanic', 'mecânic', 'bennys', 'benny', 'lsc', 'customs', 'gearhead', 'tuner', 'oficina' } },
+}
+
 -- Cor de identidade quando a convar mri:color não estiver definida (D108)
 Config.DefaultColor = '#6400E6'
 
