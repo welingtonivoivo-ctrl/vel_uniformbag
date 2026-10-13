@@ -81,6 +81,19 @@ local function wall(a, b, h, alpha)
     DrawLine(a.x, a.y, a.z, b.x, b.y, b.z, 255, 255, 255, 200)
 end
 
+--- Mira da câmera no mesmo quadro (síncrona). A versão do ox_lib espera um quadro, o que fazia o
+--- laço pular quadros: o bloqueio dos botões falhava (soco) e as teclas não eram lidas.
+local function aim(distance)
+    local from = GetFinalRenderedCamCoord()
+    local rot = GetFinalRenderedCamRot(2)
+    local rx, rz = math.rad(rot.x), math.rad(rot.z)
+    local cx = math.abs(math.cos(rx))
+    local to = from + vec3(-math.sin(rz) * cx, math.cos(rz) * cx, math.sin(rx)) * distance
+    local handle = StartExpensiveSynchronousShapeTestLosProbe(from.x, from.y, from.z, to.x, to.y, to.z, 1 | 16, cache.ped, 4)
+    local _, hit, coords = GetShapeTestResult(handle)
+    return hit == 1 or hit == true, coords
+end
+
 local function help(points, height)
     lib.showTextUI(L('draw.help', #points, ('%.1f'):format(height)), { position = 'left-center' })
 end
@@ -95,7 +108,7 @@ function DrawStashArea()
     while drawing do
         for _, c in ipairs({ 24, 25, 140, 141, 142, 200, 14, 15, 16, 17, 45 }) do DisableControlAction(0, c, true) end
 
-        local hit, _, coords = lib.raycast.fromCamera(1 | 16, 4, 25.0)
+        local hit, coords = aim(25.0)
         if hit and coords then
             DrawMarker(28, coords.x, coords.y, coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                 0.35, 0.35, 0.35, COLOR.r, COLOR.g, COLOR.b, 190, false, false, 2, false, nil, nil, false)
@@ -110,7 +123,7 @@ function DrawStashArea()
         if #points >= 3 then wall(points[#points], points[1], height, 90) end
 
         local changed = false
-        if hit and coords and IsDisabledControlJustReleased(0, 24) and #points < 20 then
+        if hit and coords and (IsDisabledControlJustReleased(0, 24) or IsControlJustReleased(0, 38)) and #points < 20 then
             points[#points + 1] = coords; changed = true
         end
         if IsDisabledControlJustReleased(0, 15) then height = math.min(20.0, height + 0.5); changed = true end -- rodinha p/ cima
