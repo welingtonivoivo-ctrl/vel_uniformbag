@@ -304,11 +304,11 @@ lib.callback.register('vel_uniformbag:panel:stashRules', function(src, org)
 end)
 
 --- Criar / excluir baú de uniformes do recurso (D223). Só staff/emergência.
-lib.callback.register('vel_uniformbag:panel:createUStash', function(src, org, label, model)
+lib.callback.register('vel_uniformbag:panel:createUStash', function(src, org, label, model, area)
     local ok, err = guard(src, org)
     if not ok then return { error = err } end
     if not isAdmin(src) then return { error = 'cmd.no_permission' } end
-    local d, cerr = UniformStash.Create(src, org, label, model)
+    local d, cerr = UniformStash.Create(src, org, label, model, area)
     if not d then return { error = cerr } end
     Utils.Audit('admin', 'bau_uniformes_criado', { src = src, org = org, data = { bau = d.id, nome = d.label, modelo = d.model } })
     Supply.SyncOrgAsync(org)

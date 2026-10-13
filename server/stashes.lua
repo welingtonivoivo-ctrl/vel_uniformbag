@@ -35,6 +35,12 @@ end
 
 local function onOpenInventory(payload)
     if payload.inventoryType ~= 'stash' then return end
+    -- Baú de uniformes do recurso: só abre de dentro da área desenhada (D224).
+    local own = UniformStash and UniformStash.Get(payload.inventoryId)
+    if own and not UniformStash.Inside(own, GetEntityCoords(GetPlayerPed(payload.source))) then
+        TriggerClientEvent('ox_lib:notify', payload.source, { type = 'error', description = L('stash.outside_area') })
+        return false
+    end
     local required = StashRules.Get(payload.inventoryId)
     if not required or playerModel(payload.source) == required then return end
 

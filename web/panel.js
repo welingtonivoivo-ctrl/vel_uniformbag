@@ -204,11 +204,9 @@
                     el('select', { onchange: (e) => { form.model = e.target.value; } },
                         el('option', { value: 'mp_f_freemode_01', text: t.rule_female }),
                         el('option', { value: 'mp_m_freemode_01', text: t.rule_male }))),
-                el('button', { class: 'btn btn-primary', text: t.ustash_create, onclick: async () => {
-                    const r = await call('createUStash', P.org, form.label, form.model);
-                    if (r.error) return setMsg('pn-stash-msg', r.message, false);
-                    await loadStashRules();
-                    setMsg('pn-stash-msg', t.saved, true);
+                el('button', { class: 'btn btn-primary', text: t.ustash_create, onclick: () => {
+                    if ((form.label || '').trim().length < 2) return setMsg('pn-stash-msg', t.ustash_name, false);
+                    nui('drawUStash', { org: P.org, label: form.label.trim(), model: form.model });
                 } }))) : null;
 
         document.getElementById('pn-body').replaceChildren(el('div', { class: 'pn-col pn-main' },

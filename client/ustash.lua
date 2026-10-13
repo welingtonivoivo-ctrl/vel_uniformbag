@@ -1,13 +1,16 @@
--- Baús de uniformes do recurso (D223): ponto de interação no local, só para membros da
--- organização. O ox_inventory confere de novo o grupo; a regra de modelo é conferida no servidor.
+-- Baús de uniformes do recurso (D223, D224): cada baú é uma ÁREA desenhada no chão; dentro dela
+-- o membro da organização aperta E para abrir. O servidor confere de novo a área, o grupo e a
+-- regra de modelo antes de abrir.
 
 local zones = {}
+local insideId
 
 local function clear()
     for id, zone in pairs(zones) do
-        pcall(function() exports.ox_target:removeZone(zone) end)
+        zone:remove()
         zones[id] = nil
     end
+    if insideId then lib.hideTextUI() insideId = nil end
 end
 
 local function memberOf(org)
@@ -18,24 +21,28 @@ end
 local function build(list)
     clear()
     for _, d in ipairs(list or {}) do
-        local ok, zone = pcall(function()
-            return exports.ox_target:addSphereZone({
-                coords = vec3(d.x, d.y, d.z),
-                radius = 1.2,
+        if type(d.points) == 'table' and #d.points >= 3 then
+            local points = {}
+            for i, p in ipairs(d.points) do points[i] = vec3(p.x, p.y, p.z) end
+            zones[d.id] = lib.zones.poly({
+                points = points,
+                thickness = (d.height or 4.0) * 2,
                 debug = false,
-                options = {
-                    {
-                        name = 'vel_uniformbag:ustash:' .. d.id,
-                        icon = 'fa-solid fa-box-open',
-                        label = L('target.ustash', d.label),
-                        distance = 2.5,
-                        canInteract = function() return memberOf(d.org) end,
-                        onSelect = function() exports.ox_inventory:openInventory('stash', d.id) end,
-                    },
-                },
+                onEnter = function()
+                    if not memberOf(d.org) then return end
+                    insideId = d.id
+                    lib.showTextUI(L('target.ustash_key', d.label), { position = 'left-center' })
+                end,
+                onExit = function()
+                    if insideId == d.id then lib.hideTextUI() insideId = nil end
+                end,
+                inside = function()
+                    if insideId == d.id and IsControlJustReleased(0, 38) then
+                        exports.ox_inventory:openInventory('stash', d.id)
+                    end
+                end,
             })
-        end)
-        if ok and zone then zones[d.id] = zone end
+        end
     end
 end
 
@@ -46,6 +53,7 @@ local function sync()
 end
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function() SetTimeout(3000, sync) end)
+RegisterNetEvent('QBCore:Client:OnJobUpdate', function() SetTimeout(500, sync) end)
 
 AddEventHandler('onClientResourceStart', function(resource)
     if resource == GetCurrentResourceName() then SetTimeout(2500, sync) end
@@ -54,3 +62,75 @@ end)
 AddEventHandler('onResourceStop', function(resource)
     if resource == GetCurrentResourceName() then clear() end
 end)
+
+------------------------------------------------------------------------------------------------
+-- Desenho da área (D224), no mesmo jeito do desenho de áreas da base: mirar no chão e clicar em
+-- cada canto; rodinha muda a altura; Backspace desfaz; R recomeça; Enter conclui; Esc cancela.
+-- Implementação própria.
+------------------------------------------------------------------------------------------------
+
+local drawing = false
+local COLOR = { r = 100, g = 0, b = 230 }
+
+local function wall(a, b, h, alpha)
+    local a2, b2 = vec3(a.x, a.y, a.z + h), vec3(b.x, b.y, b.z + h)
+    DrawPoly(a.x, a.y, a.z, b.x, b.y, b.z, b2.x, b2.y, b2.z, COLOR.r, COLOR.g, COLOR.b, alpha)
+    DrawPoly(b2.x, b2.y, b2.z, a2.x, a2.y, a2.z, a.x, a.y, a.z, COLOR.r, COLOR.g, COLOR.b, alpha)
+    DrawPoly(b.x, b.y, b.z, a.x, a.y, a.z, b2.x, b2.y, b2.z, COLOR.r, COLOR.g, COLOR.b, alpha)
+    DrawPoly(a2.x, a2.y, a2.z, b2.x, b2.y, b2.z, a.x, a.y, a.z, COLOR.r, COLOR.g, COLOR.b, alpha)
+    DrawLine(a.x, a.y, a.z, b.x, b.y, b.z, 255, 255, 255, 200)
+end
+
+local function help(points, height)
+    lib.showTextUI(L('draw.help', #points, ('%.1f'):format(height)), { position = 'left-center' })
+end
+
+---@return table|nil area { points = { {x,y,z}... }, height = number }
+function DrawStashArea()
+    if drawing then return nil end
+    drawing = true
+    local points, height, result = {}, 4.0, nil
+    help(points, height)
+
+    while drawing do
+        for _, c in ipairs({ 24, 25, 140, 141, 142, 200, 14, 15, 16, 17, 45 }) do DisableControlAction(0, c, true) end
+
+        local hit, _, coords = lib.raycast.fromCamera(1 | 16, 4, 25.0)
+        if hit and coords then
+            DrawMarker(28, coords.x, coords.y, coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.35, 0.35, 0.35, COLOR.r, COLOR.g, COLOR.b, 190, false, false, 2, false, nil, nil, false)
+            DrawLine(coords.x, coords.y, coords.z, coords.x, coords.y, coords.z + height, 255, 255, 255, 200)
+        end
+
+        for i = 1, #points do
+            local a, b = points[i], points[i + 1]
+            if b then wall(a, b, height, 90) end
+        end
+        if #points >= 1 and hit and coords then wall(points[#points], coords, height, 50) end
+        if #points >= 3 then wall(points[#points], points[1], height, 90) end
+
+        local changed = false
+        if hit and coords and IsDisabledControlJustReleased(0, 24) and #points < 20 then
+            points[#points + 1] = coords; changed = true
+        end
+        if IsDisabledControlJustReleased(0, 15) then height = math.min(20.0, height + 0.5); changed = true end -- rodinha p/ cima
+        if IsDisabledControlJustReleased(0, 14) then height = math.max(1.0, height - 0.5); changed = true end -- rodinha p/ baixo
+        if IsControlJustReleased(0, 177) and #points > 0 then points[#points] = nil; changed = true end -- Backspace
+        if IsDisabledControlJustReleased(0, 45) then points = {}; changed = true end -- R
+        if IsControlJustReleased(0, 191) or IsControlJustReleased(0, 201) then -- Enter
+            if #points >= 3 then
+                result = { points = {}, height = height }
+                for i, p in ipairs(points) do result.points[i] = { x = p.x, y = p.y, z = p.z } end
+                drawing = false
+            else
+                lib.notify({ type = 'error', description = L('draw.need_three') })
+            end
+        end
+        if IsDisabledControlJustReleased(0, 200) then drawing = false end -- Esc
+        if changed then help(points, height) end
+        Wait(0)
+    end
+
+    lib.hideTextUI()
+    return result
+end

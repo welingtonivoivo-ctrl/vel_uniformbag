@@ -31,7 +31,7 @@ local function panelLocale()
         'capture_male', 'capture_female', 'you_are', 'need_male', 'need_female', 'delete_uniform', 'delete_hint',
         'confirm_delete', 'deleted', 'deleted_deactivated', 'tab_stashes', 'stash_rules_hint', 'who_opens', 'rule_all', 'rule_male', 'rule_female', 'clear_stash', 'clear_hint', 'confirm_clear', 'cleared', 'teleport',
         'ustash_create_title', 'ustash_hint', 'ustash_placeholder', 'ustash_type', 'ustash_create', 'ustash_title',
-        'ustash_delete', 'stash_bossmenu',
+        'ustash_delete', 'stash_bossmenu', 'ustash_name',
     }
     local t = {}
     for _, k in ipairs(keys) do t[k] = L('panel.' .. k) end
@@ -111,6 +111,39 @@ RegisterNUICallback('openStore', function(_, cb)
     end
     Wait(300)
     TriggerEvent('illenium-appearance:client:openClothingShopMenu', false)
+end)
+
+--- Criar baú de uniformes desenhando a área no chão (D224). O painel fecha durante o desenho e
+--- volta depois, no mesmo modo em que estava.
+RegisterNUICallback('drawUStash', function(body, cb)
+    cb(true)
+    if type(body) ~= 'table' then return end
+    local wasEmbedded = embedded
+    if embedded then
+        embedded = false
+        panelOpen = false
+        pcall(function() exports.mri_Qadmin:ClosePlugin() end)
+    else
+        closePanel()
+    end
+    Wait(300)
+
+    local area = DrawStashArea()
+    if area then
+        local res = lib.callback.await('vel_uniformbag:panel:createUStash', false, body.org, body.label, body.model, area)
+        if type(res) == 'table' and res.error then
+            lib.notify({ type = 'error', description = L(res.error) })
+        else
+            lib.notify({ type = 'success', description = L('panel.ustash_created') })
+        end
+    end
+
+    Wait(200)
+    if wasEmbedded then
+        pcall(function() exports.mri_Qadmin:OpenPlugin('vel_uniformbag') end)
+    else
+        ExecuteCommand('adminoutfit')
+    end
 end)
 
 AddEventHandler('onResourceStop', function(resource)
