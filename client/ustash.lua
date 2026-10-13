@@ -5,6 +5,9 @@
 local zones = {}
 local insideId
 
+-- Aviso compacto dentro da área (D226).
+local PROMPT_STYLE = { fontSize = '12px', padding = '4px 8px', borderRadius = '6px' }
+
 local function clear()
     for id, zone in pairs(zones) do
         zone:remove()
@@ -31,9 +34,9 @@ local function build(list)
                 onEnter = function()
                     insideId = d.id
                     if memberOf(d.org) then
-                        lib.showTextUI(L('target.ustash_key', d.label), { position = 'left-center', icon = 'shirt' })
+                        lib.showTextUI(L('target.ustash_key'), { position = 'left-center', icon = 'shirt', style = PROMPT_STYLE })
                     else
-                        lib.showTextUI(L('target.ustash_members', d.label), { position = 'left-center', icon = 'lock' })
+                        lib.showTextUI(L('target.ustash_members'), { position = 'left-center', icon = 'lock', style = PROMPT_STYLE })
                     end
                 end,
                 onExit = function()
