@@ -408,7 +408,7 @@
     function formFrom(u) {
         if (!u) return { id: null, name: '', mode: 'lista', grades: [], min: null, max: null, active: true, models: [] };
         return { id: u.id, name: u.name, mode: u.auth_mode, grades: [...(u.grades || [])], min: u.grade_min, max: u.grade_max,
-            active: u.active, models: u.models || [], bags: u.bags };
+            active: u.active, models: u.models || [], bags: u.bags, props: u.props || {} };
     }
 
     function renderUniforms(error) {
@@ -488,6 +488,17 @@
                     el('div', {}, el('b', { text: t[key] }), ' ',
                         el('span', { class: `badge ${has ? '' : 'badge-warn'}`, text: has ? '✓' : t.missing })),
                     el('div', { class: 'pn-item-sub', text: mine ? t.you_are : (key === 'female' ? t.need_female : t.need_male) }),
+                    has ? el('div', { class: 'pn-props' },
+                        el('span', { class: 'pn-item-sub', text: `${t.props_in_uniform}:` }),
+                        (Array.isArray(f.props[model]) ? f.props[model] : []).length === 0 ? el('span', { class: 'pn-item-sub', text: t.props_none }) :
+                            f.props[model].map((pr) => el('button', { class: 'pn-prop-chip', title: t.prop_remove_hint,
+                                text: `${t['prop_' + pr.prop_id] || pr.prop_id} #${pr.drawable} ✕`, onclick: async () => {
+                                    const res = await call('removeVariantProp', f.id, model, pr.prop_id);
+                                    if (!P) return;
+                                    if (res.error) return setMsg('pn-edit-msg', res.message, false);
+                                    await loadUniforms(f.id);
+                                    setMsg('pn-edit-msg', t.prop_removed, true);
+                                } }))) : null,
                     el('div', { class: 'pn-row' },
                         el('button', { class: 'btn btn-primary btn-sm', disabled: !mine || undefined,
                             text: key === 'female' ? t.capture_female : t.capture_male, onclick: async () => {

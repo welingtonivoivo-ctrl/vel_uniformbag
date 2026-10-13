@@ -110,6 +110,16 @@ lib.callback.register('vel_uniformbag:panel:uniforms', function(src, org)
     for _, u in ipairs(rows) do
         u.active = Utils.Bool(u.active)
         u.models = Uniforms.ListVariantModels(u.id)
+        -- Acessórios gravados em cada versão (D227), para poder tirar o que não faz parte da farda.
+        u.props = {}
+        for _, v in ipairs(MySQL.query.await('SELECT `model`, `appearance` FROM `sub_uniform_variants` WHERE `uniform_id` = ?', { u.id }) or {}) do
+            local clothing = Clothing.Decode(v.appearance)
+            local list = {}
+            for _, pr in ipairs(clothing and clothing.props or {}) do
+                if pr.drawable >= 0 then list[#list + 1] = { prop_id = pr.prop_id, drawable = pr.drawable } end
+            end
+            u.props[v.model] = list
+        end
         local grades = MySQL.query.await('SELECT `grade` FROM `sub_uniform_grades` WHERE `uniform_id` = ? ORDER BY `grade`', { u.id }) or {}
         u.grades = {}
         for _, g in ipairs(grades) do u.grades[#u.grades + 1] = g.grade end
@@ -238,6 +248,29 @@ lib.callback.register('vel_uniformbag:panel:deleteUniform', function(src, unifor
     Bags.StockUniforms[uniform.id] = nil
     Utils.Audit('admin', 'uniforme_excluido', { src = src, org = uniform.org, data = { uniforme = uniform.name, id = uniform.id } })
     Supply.SyncOrgAsync(uniform.org)
+    return { ok = true }
+end)
+
+--- Tirar um acessório da versão gravada (D227): grava como "sem acessório" (-1). Ex.: relógio
+--- de pacote que deixa marca no corpo.
+lib.callback.register('vel_uniformbag:panel:removeVariantProp', function(src, uniformId, model, propId)
+    local uniform = Uniforms.Get(tonumber(uniformId))
+    if not uniform then return { error = 'cmd.uniform_unknown' } end
+    local ok, err = guard(src, uniform.org)
+    if not ok then return { error = err } end
+    propId = tonumber(propId)
+    local row = MySQL.single.await('SELECT `appearance` FROM `sub_uniform_variants` WHERE `uniform_id` = ? AND `model` = ?', { uniform.id, tostring(model) })
+    local clothing = row and Clothing.Decode(row.appearance)
+    if not clothing or not propId then return { error = 'block.invalid_request' } end
+    clothing.props = type(clothing.props) == 'table' and clothing.props or {}
+    local found = false
+    for _, pr in ipairs(clothing.props) do
+        if pr.prop_id == propId then pr.drawable, pr.texture, found = -1, -1, true end
+    end
+    if not found then clothing.props[#clothing.props + 1] = { prop_id = propId, drawable = -1, texture = -1 } end
+    MySQL.update.await('UPDATE `sub_uniform_variants` SET `appearance` = ? WHERE `uniform_id` = ? AND `model` = ?',
+        { json.encode(clothing), uniform.id, tostring(model) })
+    Utils.Audit('admin', 'acessorio_removido', { src = src, org = uniform.org, uniformId = uniform.id, data = { model = model, acessorio = propId } })
     return { ok = true }
 end)
 

@@ -9,7 +9,7 @@ local ALLOWED = {
     stashes = true, bags = true, bagHistory = true,
     alertSettings = true, saveAlertSettings = true, audit = true,
     findCharacter = true, recoverySources = true, createRecovery = true, cancelRecovery = true,
-    points = true, addPoint = true, togglePoint = true, stashRules = true, setStashRule = true, clearStash = true, teleportStash = true, createUStash = true, deleteUStash = true,
+    points = true, addPoint = true, togglePoint = true, stashRules = true, setStashRule = true, clearStash = true, teleportStash = true, createUStash = true, deleteUStash = true, removeVariantProp = true,
 }
 
 local function panelLocale()
@@ -33,6 +33,7 @@ local function panelLocale()
         'ustash_create_title', 'ustash_hint', 'ustash_placeholder', 'ustash_type', 'ustash_create', 'ustash_title',
         'ustash_delete', 'stash_bossmenu', 'ustash_name', 'ustash_edit_area', 'ustash_draw_area', 'ustash_convert',
         'ustash_convert_hint', 'ustash_convert_need_rule', 'ustash_corners', 'ustash_height', 'ustash_no_area',
+        'props_in_uniform', 'props_none', 'prop_remove_hint', 'prop_removed', 'prop_0', 'prop_1', 'prop_2', 'prop_6', 'prop_7',
     }
     local t = {}
     for _, k in ipairs(keys) do t[k] = L('panel.' .. k) end
