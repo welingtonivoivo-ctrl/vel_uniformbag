@@ -184,6 +184,7 @@ Locale = {
     ['stash.only_male']      = 'Este baú é só para personagens masculinos.',
     ['stash.outside_area']   = 'Você precisa estar dentro da área do baú.',
     ['withdraw.one_at_a_time'] = 'Retire uma bolsa por vez.',
+    ['deposit.wrong_org']    = 'Esta bolsa é da organização %s: só pode ser guardada nos baús dela.',
     ['withdraw.free']        = 'Bolsa retirada. Esta foi a sua retirada grátis; a próxima será cobrada.',
     ['withdraw.paid_bank']   = 'Bolsa retirada: R$ %s descontados do banco.',
     ['withdraw.paid_cash']   = 'Bolsa retirada: R$ %s pagos em dinheiro.',

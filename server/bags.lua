@@ -320,10 +320,32 @@ local function chargeWithdrawal(src, meta, stashId)
     return true
 end
 
+--- Organização dona de um baú: baús de uniformes do recurso (D223) ou baús do mri_Qbossmenu
+--- (<job>_stash_<n>). Baús pessoais, porta-malas etc. não têm organização (nil).
+local function stashOrg(invId)
+    if type(invId) ~= 'string' then return nil end
+    local own = UniformStash and UniformStash.Get(invId)
+    if own then return own.org end
+    local org = invId:match('^(.-)_stash_')
+    if org and org ~= '' and (exports.qbx_core:GetJobs() or {})[org] then return org end
+    return nil
+end
+
 --- Hook swapItems: regras de retirada (D220) e registro da nova localização da bolsa (D189).
 local function onSwapItems(payload)
     local item = payload.fromSlot
     local meta = type(item) == 'table' and item.metadata or {}
+
+    -- Bolsa só volta para os baús da própria organização (D230): bolsa da Mecânica não entra
+    -- em baú da Polícia. Fora de baús de organização (casa, porta-malas, chão) segue liberado.
+    if payload.toType == 'stash' and payload.fromInventory ~= payload.toInventory and type(meta.org) == 'string' then
+        local owner = stashOrg(payload.toInventory)
+        if owner and owner ~= meta.org then
+            local job = (exports.qbx_core:GetJobs() or {})[meta.org]
+            swapNotify(payload.source, 'deposit.wrong_org', 'error', job and job.label or meta.org)
+            return false
+        end
+    end
 
     if payload.fromType == 'stash' and payload.toType == 'player' and isUniformStash(payload.fromInventory, meta.org) then
         if (tonumber(payload.count) or 1) > 1 then

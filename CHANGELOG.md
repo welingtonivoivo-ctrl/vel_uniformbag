@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.2] — 2026-10-13
+
+### Alterado
+- Bolsa de uniforme não pode ser guardada em baú de outra organização (D230).
+
 ## [0.4.1] — 2026-10-13 — Fechamento da etapa 4 e revisão de qualidade
 
 ### Removido
