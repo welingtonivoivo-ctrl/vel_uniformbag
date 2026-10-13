@@ -67,7 +67,7 @@ function Appearance.Save()
     end
 end
 
--- Captura pedida pelos comandos provisórios de cadastro (etapa 3).
+-- Captura da roupa atual pedida pelo painel (gravar versão do uniforme).
 lib.callback.register('vel_uniformbag:client:capture', function()
     return Appearance.Capture()
 end)

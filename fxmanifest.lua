@@ -30,7 +30,6 @@ server_scripts {
     'server/issue.lua',
     'server/alerts.lua',
     'server/change.lua',
-    'server/commands.lua',
     'server/panel.lua',
     'server/recovery.lua',
     'server/points.lua',
