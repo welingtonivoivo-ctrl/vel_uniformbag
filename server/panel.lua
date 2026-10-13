@@ -203,6 +203,15 @@ lib.callback.register('vel_uniformbag:panel:captureVariant', function(src, unifo
         return { error = expectedModel == 'mp_f_freemode_01' and 'panel.need_female' or 'panel.need_male' }
     end
 
+    -- Relógio e pulseira nunca entram na farda (D228): grava como "sem acessório".
+    for _, propId in ipairs(Config.UniformStripProps or {}) do
+        local found = false
+        for _, pr in ipairs(clothing.props) do
+            if pr.prop_id == propId then pr.drawable, pr.texture, found = -1, -1, true end
+        end
+        if not found then clothing.props[#clothing.props + 1] = { prop_id = propId, drawable = -1, texture = -1 } end
+    end
+
     Uniforms.SaveVariant(src, uniform.id, clothing)
     Supply.SyncOrgAsync(uniform.org)
     return { ok = true, model = clothing.model }

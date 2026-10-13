@@ -93,6 +93,8 @@ CreateThread(function()
         Change.RevertInterrupted()
         log(L('startup.known_bags', Bags.LoadKnown()))
         Bags.LoadStockUniforms()
+        local stripped = Uniforms.StripPropsAll()
+        if stripped > 0 then log(L('startup.stripped', stripped)) end
         Bags.LoadUniformStashes()
         log(L('startup.ground', Ground.Load()))
         log(L('startup.points', Points.Load()))

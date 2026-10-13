@@ -121,3 +121,33 @@ function Uniforms.SaveVariant(src, uniformId, clothing)
     local uniform = Uniforms.Get(uniformId)
     Utils.Audit('admin', 'versao_uniforme_gravada', { src = src, org = uniform and uniform.org, uniformId = uniformId, data = { model = clothing.model } })
 end
+
+--- Tira relógio e pulseira (Config.UniformStripProps) das versões já gravadas (D228). Idempotente.
+function Uniforms.StripPropsAll()
+    local strip = Config.UniformStripProps or {}
+    if #strip == 0 then return 0 end
+    local changed = 0
+    for _, v in ipairs(MySQL.query.await('SELECT `uniform_id`, `model`, `appearance` FROM `sub_uniform_variants`') or {}) do
+        local clothing = Clothing.Decode(v.appearance)
+        if clothing then
+            clothing.props = type(clothing.props) == 'table' and clothing.props or {}
+            local dirty = false
+            for _, propId in ipairs(strip) do
+                local found = false
+                for _, pr in ipairs(clothing.props) do
+                    if pr.prop_id == propId then
+                        found = true
+                        if pr.drawable ~= -1 then pr.drawable, pr.texture, dirty = -1, -1, true end
+                    end
+                end
+                if not found then clothing.props[#clothing.props + 1] = { prop_id = propId, drawable = -1, texture = -1 }; dirty = true end
+            end
+            if dirty then
+                MySQL.update.await('UPDATE `sub_uniform_variants` SET `appearance` = ? WHERE `uniform_id` = ? AND `model` = ?',
+                    { json.encode(clothing), v.uniform_id, v.model })
+                changed = changed + 1
+            end
+        end
+    end
+    return changed
+end

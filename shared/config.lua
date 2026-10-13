@@ -53,6 +53,10 @@ Config.DefaultColor = '#6400E6'
 Config.ClothingComponents = { 1, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
 Config.ClothingProps = { 0, 1, 2, 6, 7 }
 
+-- Acessórios que a farda nunca leva (D228): tirados automaticamente ao gravar a versão.
+-- 6 = relógio (o nº 2 do GTA deixa uma marca solta nas costas), 7 = pulseira.
+Config.UniformStripProps = { 6, 7 }
+
 -- Peças usadas para reconhecer uma farda vestida (D140, D193, D196).
 -- Máscara, mochila, colete e emblemas variam no RP e não entram na comparação.
 Config.UniformMatchComponents = { 3, 4, 6, 8, 11 }

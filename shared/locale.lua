@@ -288,6 +288,7 @@ Locale = {
     ['startup.points']       = 'Pontos de gestão carregados: %s.',
     ['startup.relabel']      = 'Nomes das bolsas nos baús atualizados: %s.',
     ['startup.supply']       = 'Baús de uniformes abastecidos (uma bolsa de cada uniforme ativo, reposta a cada retirada).',
+    ['startup.stripped']     = 'Relógio e pulseira retirados de %s versões de farda já gravadas.',
     ['startup.ustash']       = 'Baús de uniformes carregados: %s.',
     ['startup.reload_needed'] = 'Arquivo server/stashes.lua não carregado: rode "refresh" e depois "ensure vel_uniformbag". O bloqueio de baús por modelo está desligado até lá.',
 
