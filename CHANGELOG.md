@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.1] — 2026-10-13 — Fechamento da etapa 4 e revisão de qualidade
+
+### Removido
+- Comandos provisórios da etapa 3 (`/ubag_uniforme`, `/ubag_versao`, `/ubag_emitir`, `/ubag_alerta`, `/ubag_uniformes`) e seus textos: o painel faz tudo isso (plano, etapa 4).
+
+### Adicionado
+- Imagens do item feitas no Blender (D229): padrão roxa, Polícia, Hospital e Mecânica, em `art/render` (script `art/gerar_bolsas.py` + `.blend`). Copiadas para `ox_inventory/web/images`.
+
+### Documentação
+- Novo `docs/MANUAL.md` (uso para staff e líderes); README com instalação completa (item, permissão, convars); situação das etapas em `docs/06-PLANO.md`.
+
+### Qualidade (etapa 5, parte de código)
+- Revisão das permissões de todos os callbacks do servidor, varredura de variáveis globais acidentais e nomes inexistentes (nenhum encontrado) e conferência de laços por quadro no cliente (só durante o desenho de área).
+
 ## [0.4.0] — 2026-10-12 — Nome neutro para distribuição (D210)
 
 ### Alterado

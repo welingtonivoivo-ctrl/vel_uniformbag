@@ -70,6 +70,19 @@ Versionamento: repositório privado `welingtonivoivo-ctrl/vel_uniformbag`, prime
 - **Passos:** dump do banco `street`; backup de `ox_inventory/data/items.lua` da VPS; copiar o recurso e as imagens aprovadas; acrescentar a entrada do item; configurar convars privadas (webhooks) e `add_ace` de emergência no server.cfg (com backup e autorização); reinício por você via MRI/txAdmin; validação em produção com roteiro curto.
 - **Reverter:** remover o recurso e a entrada do item (restaurar backup); tabelas `sub_*` permanecem inertes.
 
+## Situação das etapas (atualizada em 2026-10-13)
+
+| Etapa | Situação |
+|---|---|
+| 1 — Preparação | **Concluída** (2026-10-12). |
+| 2 — Dados e permissões | **Concluída** (2026-10-12). |
+| 3 — Funcionalidade principal | **Concluída.** Imagens feitas no Blender em 2026-10-13 (V10, D229), aguardando a aprovação do dono. |
+| 4 — Funcionalidades complementares | **Concluída** (painel, pontos, baús de uniformes com área e abastecimento infinito, Discord, recuperação). Comandos provisórios `/ubag_*` removidos em 0.4.1. A aba Emissão foi substituída pelo abastecimento infinito (D222). |
+| 5 — Qualidade e segurança | **Revisão de código feita** (0.4.1). **Falta:** roteiro de testes em jogo (critérios do PRD, testes negativos de permissão, reinício no meio de uma troca, resmon) — depende de jogadores na cidade. |
+| 6 — Implantação na VPS | **Feita** (2026-10-12, autorizada): `[viber_code]\vel_uniformbag` + item no `items.lua`. Cada versão nova é copiada após conferência de hash. **Falta:** marcar a permissão no grupo da staff no mri_Qadmin da VPS e configurar os webhooks de produção. |
+
+**Pendências que dependem do dono:** testes em jogo (etapa 5); permissão no Perms da VPS; webhooks de produção; aprovar as imagens da bolsa (D229).
+
 ---
 
 # Conferência final dos seis documentos (2026-10-12)

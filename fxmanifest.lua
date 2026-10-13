@@ -5,7 +5,7 @@ lua54 'yes'
 name 'vel_uniformbag'
 author 'Vel'
 description 'Sistema de Bolsas de Uniformes para servidores FiveM (QBox)'
-version '0.4.0'
+version '0.4.1'
 
 shared_scripts {
     '@ox_lib/init.lua',
