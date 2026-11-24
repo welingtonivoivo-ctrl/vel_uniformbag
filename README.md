@@ -49,3 +49,7 @@ Opcionais: `mri_Qadmin` (permissão e aba Plugins), `ps-dispatch` (alertas), `mr
 ## Configuração
 
 Todos os limites ficam em `shared/config.lua`: compartimentos por bolsa (`Slots`), distância, preço da bolsa extra (`ReplacementPrice`), acessórios que nunca entram na farda (`UniformStripProps`), comando de recuperação (`RecoveryCommand`), dias para inatividade e o código do alerta no ps-dispatch.
+
+## Licença
+
+GPL-3.0 — pode usar, modificar e redistribuir, desde que o código continue aberto com a mesma licença. Proibido vender como script fechado.
